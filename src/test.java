@@ -1,6 +1,11 @@
-public class test {
+import com.jAI.Matrix;
 
+public class test {
     public static void main(String[] args) {
-        System.out.println("hi");
+        Matrix m = new Matrix(3,2);
+        m.add(2);
+        Matrix m2 = new Matrix(3,2);
+        m.divide(m2);
+        m.print();
     }
 }
