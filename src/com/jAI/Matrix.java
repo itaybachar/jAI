@@ -2,9 +2,11 @@ package com.jAI;
 
 import com.sun.jdi.Method;
 
+import java.util.function.Function;
+
 public class Matrix {
 
-    public double[][] mat;
+    private double[][] mat;
     private int rows,cols;
 
     public Matrix(int rows, int cols){
@@ -123,9 +125,40 @@ public class Matrix {
         mat[row][col] = val;
     }
 
-    //Apply function
-    public void applyFunction(Method func){
+    //Get element
+    public double get(int row,int col){
+        return mat[row][col];
+    }
 
+    //Apply function
+    public void applyFunction(Function<Double,Double> func){
+        for (int y = 0; y < rows; y++) {
+            for (int x = 0; x < cols; x++) {
+                mat[y][x] = func.apply(mat[y][x]);
+            }
+        }
+    }
+
+    //Convert array to matrix
+    public static Matrix fromArray(double[][] arr){
+        Matrix m = new Matrix(arr.length,arr[0].length);
+        for(int y = 0; y<arr.length;y++) {
+            for (int x = 0; x < arr[0].length; x++) {
+                m.set(y, x, arr[y][x]);
+            }
+        }
+        return m;
+    }
+
+    //Convert Matrix to Array
+    public static double[][] toArray(Matrix m){
+        double[][] arr = new double[m.rows][m.cols];
+        for(int y = 0;y< m.rows;y++){
+            for(int x = 0; x<m.cols;x++){
+                arr[y][x] = m.get(y,x);
+            }
+        }
+        return arr;
     }
 
     //Print out matrix
@@ -136,6 +169,14 @@ public class Matrix {
             }
             System.out.println();
         }
+    }
+
+    public int getRows(){
+        return rows;
+    }
+
+    public int getCols(){
+        return cols;
     }
 
     static void Assert(boolean cond,String message){
