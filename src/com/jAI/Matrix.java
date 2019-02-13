@@ -125,6 +125,16 @@ public class Matrix {
         mat[row][col] = val;
     }
 
+    //Set elements
+    public void set(double[][] arr){
+        Assert(arr.length == rows && arr[0].length == cols,"Bad Dimensions",getLineNumber());
+        for (int y = 0; y < rows; y++) {
+            for (int x = 0; x < cols; x++) {
+                mat[y][x] = arr[y][x];
+            }
+        }
+    }
+
     //Get element
     public double get(int row,int col){
         return mat[row][col];
@@ -159,6 +169,17 @@ public class Matrix {
             }
         }
         return arr;
+    }
+
+    //Transpose the Matrix
+    public static Matrix transpose(Matrix in){
+        Matrix m = new Matrix(in.cols,in.rows);
+        for(int y = 0; y< in.rows;y++){
+            for(int x = 0; x<in.cols;x++){
+                m.set(x,y,in.get(y,x));
+            }
+        }
+        return m;
     }
 
     //Print out matrix
