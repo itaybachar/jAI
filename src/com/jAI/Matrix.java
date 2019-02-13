@@ -26,7 +26,7 @@ public class Matrix {
 
     //Add matrices element wise
     public void add(Matrix in) {
-        Assert(rows == in.rows && cols == in.cols, "Bad Dimensions");
+        Assert(rows == in.rows && cols == in.cols, "Bad Dimensions",getLineNumber());
         for (int y = 0; y < rows; y++) {
             for (int x = 0; x < cols; x++) {
                 mat[y][x] += in.mat[y][x];
@@ -45,7 +45,7 @@ public class Matrix {
 
     //Subtract matrices element wise
     public void subtract(Matrix in) {
-        Assert(rows == in.rows && cols == in.cols, "Bad Dimensions");
+        Assert(rows == in.rows && cols == in.cols, "Bad Dimensions",getLineNumber());
         for (int y = 0; y < rows; y++) {
             for (int x = 0; x < cols; x++) {
                 mat[y][x] -= in.mat[y][x];
@@ -64,7 +64,7 @@ public class Matrix {
 
     //Multiply matrices element wise
     public void hadamard(Matrix in) {
-        Assert(rows == in.rows && cols == in.cols, "Bad Dimensions");
+        Assert(rows == in.rows && cols == in.cols, "Bad Dimensions",getLineNumber());
         for (int y = 0; y < rows; y++) {
             for (int x = 0; x < cols; x++) {
                 mat[y][x] *= in.mat[y][x];
@@ -74,7 +74,7 @@ public class Matrix {
 
     //Dot product Matrices
     static Matrix dot(Matrix m1,Matrix m2){
-        Assert(m1.cols == m2.rows,"Bad Dimensions");
+        Assert(m1.cols == m2.rows,"Bad Dimensions",getLineNumber());
         Matrix m = new Matrix(m1.rows,m2.cols);
         for(int y= 0; y<m1.rows;y++){
             for(int x = 0; x<m2.cols;x++){
@@ -90,7 +90,7 @@ public class Matrix {
 
     //Divide scalar
     public void divide(double scalar) {
-        Assert(scalar != 0.0, "Division By Zero");
+        Assert(scalar != 0.0, "Division By Zero",getLineNumber());
         for (int y = 0; y < rows; y++) {
             for (int x = 0; x < cols; x++) {
                 mat[y][x] /= scalar;
@@ -100,10 +100,10 @@ public class Matrix {
 
     //Divide matrices element wise
     public void divide(Matrix in) {
-        Assert(rows == in.rows && cols == in.cols, "Bad Dimensions");
+        Assert(rows == in.rows && cols == in.cols, "Bad Dimensions",getLineNumber());
         for (int y = 0; y < rows; y++) {
             for (int x = 0; x < cols; x++) {
-                Assert(in.mat[y][x] != 0.0, "Division By Zero");
+                Assert(in.mat[y][x] != 0.0, "Division By Zero",getLineNumber());
                 mat[y][x] /= in.mat[y][x];
             }
         }
@@ -179,11 +179,15 @@ public class Matrix {
         return cols;
     }
 
-    static void Assert(boolean cond,String message){
+    static void Assert(boolean cond,String message,int line){
         if(!cond){
-            System.out.println(message);
+            System.err.println(message + " Line: " +line);
             System.exit(-1);
         }
+    }
+
+    public static int getLineNumber() {
+        return Thread.currentThread().getStackTrace()[2].getLineNumber();
     }
 
 }
