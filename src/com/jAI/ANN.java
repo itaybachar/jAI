@@ -15,7 +15,6 @@ public class ANN {
     private Matrix[] W; //Weights per layer
     private Matrix[] H; //Hidden layer outputs
     private Matrix[] Z; //Weighted Sums from first hidden to output
-    private Matrix[] Error; //Errors per layer
     private Matrix I,O; //Input layer and Output layer
     private Function<Double,Double> activation,activationPrime;
 
@@ -31,7 +30,6 @@ public class ANN {
         this.W = new Matrix[hidden.length+1];
         this.B = new Matrix[hidden.length+1];
         this.Z = new Matrix[hidden.length+1];
-        this.Error = new Matrix[hidden.length+1];
 
         //Initialize Matrices
         //Connection from input layer to first hidden
@@ -94,31 +92,89 @@ public class ANN {
         Matrix.Assert(target_outputs.length == O.getCols(), "Bad Dimensions", Matrix.getLineNumber());
         Matrix EO = Matrix.fromArray(new double[][]{target_outputs});
 
-        //Calculate output Error
-        Error[Error.length-1] = O.clone();
-        Error[Error.length-1].subtract(EO);
-        Error[Error.length-1].hadamard(Matrix.applyFunction(Z[Z.length-1],activationPrime));
+        //Get the Errors
+        Matrix[] Errors = calculateError(EO);
 
-        //Calculate hidden errors
-        for(int i = Error.length-2; i>=0;i--){
-            Error[i] = Matrix.dot(Error[i+1],Matrix.transpose(W[i+1]));
-            Error[i].hadamard(Matrix.applyFunction(Z[i],activationPrime));
-        }
+        //Apply the Errors
+        applyErrors(Errors);
+    }
 
-        //Apply Error to layers
-        //Start with first weight and bias
-        Matrix dCdW = Matrix.dot(Matrix.transpose(I),Error[0]);
+    public void SGD(double[][] inputs,double[][] target_outputs,int minibatch_size,boolean verbose) {
+        //Create and shuffle training set
+        TrainingSet trainingSet = new TrainingSet(inputs, target_outputs);
+        trainingSet.shuffle();
 
-        W[0].subtract(dCdW); //Adjust Weight
-        B[0].subtract(Matrix.multiply(Error[0],learningRate)); //Adjust Bias
+        //Train through the minibatches
+        for (int i = 0; i < trainingSet.getSize() / minibatch_size; i++) {
+            Matrix[] Errors = new Matrix[H.length + 1];
 
-        //Rest of network
-        for(int i = 1; i<Error.length;i++){
-            dCdW = Matrix.dot(Matrix.transpose(H[i-1]),Error[i]);
+            //Forward propagate through the data and add errors
+            for (int j = 0; j < minibatch_size; j++) {
+                TrainingSet.Data data = trainingSet.data.get(i * minibatch_size + j);
 
-            W[i].subtract(dCdW); //Adjust Weight
-            B[i].subtract(Matrix.multiply(Error[i],learningRate)); //Adjust Bias
+                //Feed Forward
+                feedForward(data.input);
+
+                //Set the Expected Output
+                Matrix EO = Matrix.fromArray(new double[][]{data.output});
+
+                //Set the Errors if first iteration
+                if (j == 0) {
+                    Errors = calculateError(EO);
+                } else {
+                    Matrix[] currentError = calculateError(EO);
+                    //Sum up the Errors
+                    for (int k = 0; k < currentError.length; k++) {
+                        Errors[k].add(currentError[k]);
+                    }
+                }
+            }
+
+            //Average the values
+            for (int j = 0; j < Errors.length; j++) {
+                Errors[i].divide(minibatch_size);
+            }
+
+            //Apply the errors
+            applyErrors(Errors);
+            if (verbose)
+                System.out.println("Finished minibatch #" + (i + 1));
         }
     }
+
+    //Calculate the layer error with backpropagation
+    private Matrix[] calculateError(Matrix target){
+        Matrix[] Errors = new Matrix[H.length+1];
+
+        //Calculate output Error
+        Errors[Errors.length-1] = O.clone();
+        Errors[Errors.length-1].subtract(target);
+        Errors[Errors.length-1].hadamard(Matrix.applyFunction(Z[Z.length-1],activationPrime));
+
+        //Calculate hidden errors
+        for(int i = Errors.length-2; i>=0;i--){
+            Errors[i] = Matrix.dot(Errors[i+1],Matrix.transpose(W[i+1]));
+            Errors[i].hadamard(Matrix.applyFunction(Z[i],activationPrime));
+        }
+        return Errors;
+    }
+
+    private void applyErrors(Matrix[] Errors){
+        //Apply Error to layers
+        //Start with first weight and bias
+        Matrix dCdW = Matrix.dot(Matrix.transpose(I),Errors[0]);
+
+        W[0].subtract(dCdW); //Adjust Weight
+        B[0].subtract(Matrix.multiply(Errors[0],learningRate)); //Adjust Bias
+
+        //Rest of network
+        for(int i = 1; i<Errors.length;i++){
+            dCdW = Matrix.dot(Matrix.transpose(H[i-1]),Errors[i]);
+
+            W[i].subtract(dCdW); //Adjust Weight
+            B[i].subtract(Matrix.multiply(Errors[i],learningRate)); //Adjust Bias
+        }
+    }
+
 
 }
