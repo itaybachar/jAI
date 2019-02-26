@@ -88,6 +88,7 @@ public class ANN {
         this.learningRate = in;
     }
 
+    //Apply gradient decent to the network, this will train on one epoch.
     public void GD(double[] target_outputs) {
         Matrix.Assert(target_outputs.length == O.getCols(), "Bad Dimensions", Matrix.getLineNumber());
         Matrix EO = Matrix.fromArray(new double[][]{target_outputs});
@@ -99,6 +100,7 @@ public class ANN {
         applyErrors(Errors);
     }
 
+    //Apply Stochastic Gradient decent to a network given a dataset, this will train on one epoch.
     public void SGD(double[][] inputs,double[][] target_outputs,int minibatch_size,boolean verbose) {
         //Create and shuffle training set
         TrainingSet trainingSet = new TrainingSet(inputs, target_outputs);
@@ -107,6 +109,7 @@ public class ANN {
         //Train through the minibatches
         for (int i = 0; i < trainingSet.getSize() / minibatch_size; i++) {
             Matrix[] Errors = new Matrix[H.length + 1];
+            Matrix[] wErrors = new Matrix[H.length+1];
 
             //Forward propagate through the data and add errors
             for (int j = 0; j < minibatch_size; j++) {
@@ -121,22 +124,45 @@ public class ANN {
                 //Set the Errors if first iteration
                 if (j == 0) {
                     Errors = calculateError(EO);
+
+                    wErrors[0] = Matrix.dot(Matrix.transpose(I),Errors[0]);
+                    for(int l = 1; l<Errors.length;l++) {
+                        wErrors[l] = Matrix.dot(Matrix.transpose(H[l - 1]), Errors[l]);
+                    }
                 } else {
-                    Matrix[] currentError = calculateError(EO);
+                    Matrix[] currentErrors = calculateError(EO);
+                    Matrix[] currentWErrors = new Matrix[H.length+1];
+
+                    currentWErrors[0] = Matrix.dot(Matrix.transpose(I),currentErrors[0]);
+                    for(int l = 1; l<Errors.length;l++) {
+                        currentWErrors[l] = Matrix.dot(Matrix.transpose(H[l - 1]), currentErrors[l]);
+                    }
+
                     //Sum up the Errors
-                    for (int k = 0; k < currentError.length; k++) {
-                        Errors[k].add(currentError[k]);
+                    for (int k = 0; k < currentErrors.length; k++) {
+                        Errors[k].add(currentErrors[k]);
                     }
                 }
             }
 
             //Average the values
             for (int j = 0; j < Errors.length; j++) {
-                Errors[i].divide(minibatch_size);
+                Errors[j].divide(minibatch_size);
+                wErrors[j].divide(minibatch_size);
             }
 
             //Apply the errors
-            applyErrors(Errors);
+//            applyErrors(Errors);
+
+            W[0].subtract(wErrors[0]); //Adjust Weight
+            B[0].subtract(Matrix.multiply(Errors[0],learningRate)); //Adjust Bias
+
+            //Rest of network
+            for(int l = 1; l<Errors.length;l++){
+                W[l].subtract(wErrors[l]); //Adjust Weight
+                B[l].subtract(Matrix.multiply(Errors[l],learningRate)); //Adjust Bias
+            }
+
             if (verbose)
                 System.out.println("Finished minibatch #" + (i + 1));
         }

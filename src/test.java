@@ -15,7 +15,7 @@ public class test {
 
        ANN brain = new ANN(2,new int[]{5},1,0.1,Activations::sigmoid,Activations::sigmoidPrime);
 
-       for(int i = 0; i<100;i++)
+       for(int i = 0; i<20000;i++)
        brain.SGD(data,out,2,false);
 
 //       for(int i = 0; i<100000;i++){
