@@ -1,5 +1,8 @@
 package com.jAI;
 
+import com.jAI.util.Matrix;
+import com.jAI.util.TrainingSet;
+
 import java.util.function.Function;
 
 /**

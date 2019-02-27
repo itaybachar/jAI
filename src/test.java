@@ -1,7 +1,8 @@
 import com.jAI.ANN;
 import com.jAI.Activations;
-import com.jAI.Matrix;
-import com.jAI.TrainingSet;
+import com.jAI.util.MNISTReader;
+
+import java.io.File;
 
 public class test {
     public static void main(String[] args) {
@@ -15,7 +16,7 @@ public class test {
        double[][] out = {{0},{1},{1},{0}};
 
        ANN brain = new ANN(2,new int[]{5},1,0.1,Activations::sigmoid,Activations::sigmoidPrime);
-       
+
        for(int i = 0; i<20000;i++)
        brain.mini_batch(data,out,1,false);
 

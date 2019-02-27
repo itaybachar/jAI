@@ -1,10 +1,10 @@
-package com.jAI;
+package com.jAI.util;
 
 import java.util.ArrayList;
 
 //Class that handles training data as a couple(x,y)
 public class TrainingSet {
-    ArrayList<Data> data;
+    public ArrayList<Data> data;
 
     //Initialize Training set
     public TrainingSet(double[][] inputs, double[][] outputs){

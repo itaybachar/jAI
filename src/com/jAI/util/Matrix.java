@@ -1,6 +1,4 @@
-package com.jAI;
-
-import com.sun.jdi.Method;
+package com.jAI.util;
 
 import java.util.function.Function;
 
@@ -137,7 +135,7 @@ public class Matrix {
     //=====================================STATIC===========================================//
 
     //Dot product Matrices
-    static Matrix dot(Matrix m1, Matrix m2) {
+    public static Matrix dot(Matrix m1, Matrix m2) {
         Assert(m1.cols == m2.rows, "Bad Dimensions");
         Matrix m = new Matrix(m1.rows, m2.cols);
         for (int y = 0; y < m1.rows; y++) {
