@@ -1,5 +1,6 @@
 import com.jAI.ANN;
 import com.jAI.Activations;
+import com.jAI.Matrix;
 import com.jAI.TrainingSet;
 
 public class test {
@@ -14,9 +15,9 @@ public class test {
        double[][] out = {{0},{1},{1},{0}};
 
        ANN brain = new ANN(2,new int[]{5},1,0.1,Activations::sigmoid,Activations::sigmoidPrime);
-
+       
        for(int i = 0; i<20000;i++)
-       brain.SGD(data,out,2,false);
+       brain.mini_batch(data,out,1,false);
 
 //       for(int i = 0; i<100000;i++){
 //           int index = (int)(Math.random()*4);

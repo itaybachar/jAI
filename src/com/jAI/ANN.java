@@ -88,9 +88,9 @@ public class ANN {
         this.learningRate = in;
     }
 
-    //Apply gradient decent to the network, this will train on one epoch.
-    public void GD(double[] target_outputs) {
-        Matrix.Assert(target_outputs.length == O.getCols(), "Bad Dimensions", Matrix.getLineNumber());
+    //Apply gradient descent to the network, this will train on one epoch.
+    public void SGD(double[] target_outputs) {
+        Matrix.Assert(target_outputs.length == O.getCols(), "Bad Dimensions");
         Matrix EO = Matrix.fromArray(new double[][]{target_outputs});
 
         //Get the Errors
@@ -100,8 +100,14 @@ public class ANN {
         applyErrors(Errors);
     }
 
-    //Apply Stochastic Gradient decent to a network given a dataset, this will train on one epoch.
-    public void SGD(double[][] inputs,double[][] target_outputs,int minibatch_size,boolean verbose) {
+    public void learn(double[][] inputs,double[][] target_outputs,int minibatch_size){
+        //Create and shuffle training set
+        TrainingSet trainingSet = new TrainingSet(inputs, target_outputs);
+
+    }
+
+    //Apply Stochastic Gradient descent to a network given a dataset, this will train on one epoch.
+    public void mini_batch(double[][] inputs,double[][] target_outputs,int minibatch_size,boolean verbose) {
         //Create and shuffle training set
         TrainingSet trainingSet = new TrainingSet(inputs, target_outputs);
         trainingSet.shuffle();
