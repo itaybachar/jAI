@@ -3,6 +3,9 @@ package com.jAI;
 import com.jAI.util.Matrix;
 import com.jAI.util.TrainingSet;
 
+import java.io.*;
+import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.function.Function;
 
 /**
@@ -20,6 +23,19 @@ public class ANN {
     private Matrix[] Z; //Weighted Sums from first hidden to output
     private Matrix I,O; //Input layer and Output layer
     private Function<Double,Double> activation,activationPrime;
+
+    public ANN(Matrix I, Matrix[] W, Matrix[] B){
+        this.I = I;
+        this.W = W;
+        this.B = B;
+
+        H = new Matrix[W.length-1];
+        Z = new Matrix[W.length];
+
+        activation = Activations::sigmoid;
+        activationPrime = Activations::sigmoidPrime;
+        learningRate = 0.1;
+    }
 
     public ANN(int inputs, int[] hidden, int outputs,double learningRate,Function<Double,Double> activation,Function<Double,Double> activationPrime){
         //Set Variables
@@ -91,6 +107,11 @@ public class ANN {
         this.learningRate = in;
     }
 
+    public void setActivations(Function<Double,Double> activation,Function<Double,Double> activationPrime){
+        this.activation = activation;
+        this.activationPrime = activationPrime;
+    }
+
     //Apply gradient descent to the network, this will train on one epoch.
     public void SGD(double[] target_outputs) {
         Matrix.Assert(target_outputs.length == O.getCols(), "Bad Dimensions");
@@ -99,11 +120,69 @@ public class ANN {
         //Get the Errors
         Matrix[] Errors = calculateError(EO);
 
-        //Apply the Errors
-        applyErrors(Errors);
+        //Apply Error to layers
+        //Start with first weight and bias
+        Matrix dCdW = Matrix.dot(Matrix.transpose(I),Errors[0]);
+
+        W[0].subtract(dCdW); //Adjust Weight
+        B[0].subtract(Matrix.multiply(Errors[0],learningRate)); //Adjust Bias
+
+        //Rest of network
+        for(int i = 1; i<Errors.length;i++){
+            dCdW = Matrix.dot(Matrix.transpose(H[i-1]),Errors[i]);
+
+            W[i].subtract(dCdW); //Adjust Weight
+            B[i].subtract(Matrix.multiply(Errors[i],learningRate)); //Adjust Bias
+        }
     }
 
-    public void learn(double[][] inputs,double[][] target_outputs,int minibatch_size){
+    public void learn_SGD(double[][] inputs,double[][] target_outputs,int epochNum) {
+        //Create a training set
+        TrainingSet trainingSet = new TrainingSet(inputs, target_outputs);
+
+        for (int i = 0; i < epochNum; i++) {
+            //Print progress
+            System.out.print("\rTrained: " + (i) + "/" + epochNum);
+
+            //Shuffle set
+            trainingSet.shuffle();
+
+            for (int j = 0; j < trainingSet.getSize(); j++) {
+                //Get next data set
+                TrainingSet.Data current = trainingSet.data.get(j);
+
+                //Feedforward and backpropagate
+                feedForward(current.input);
+                SGD(current.output);
+            }
+
+        }
+        System.out.print("\rTrained: " + epochNum + "/" + epochNum);
+        System.out.println("\nDone!");
+    }
+
+    public void test(double[][] inputs, double[][] target_outputs, int test_num){
+        TrainingSet trainingSet = new TrainingSet(inputs,target_outputs);
+
+        int correct = 0;
+        int tested = 0;
+        for(int i = 0; i<test_num;i++){
+            TrainingSet.Data data = trainingSet.pickRandom();
+            Matrix res =feedForward(data.input);
+            res.applyFunction(Activations::step);
+
+            tested++;
+            if(res.equals(Matrix.fromArray(new double[][]{data.output})))
+                correct++;
+
+            DecimalFormat decimalFormat = new DecimalFormat("#.##%");
+            System.out.print("\r" + decimalFormat.format((double)correct/tested) + " Correct");
+        }
+        System.out.println();
+    }
+
+
+    public void learn_minibatch(double[][] inputs,double[][] target_outputs,int minibatch_size){
         //Create and shuffle training set
         TrainingSet trainingSet = new TrainingSet(inputs, target_outputs);
 
@@ -194,21 +273,82 @@ public class ANN {
         return Errors;
     }
 
-    private void applyErrors(Matrix[] Errors){
-        //Apply Error to layers
-        //Start with first weight and bias
-        Matrix dCdW = Matrix.dot(Matrix.transpose(I),Errors[0]);
+    public void saveNetwork(String path, String name){
+        File file = new File(path+name+".ann");
 
-        W[0].subtract(dCdW); //Adjust Weight
-        B[0].subtract(Matrix.multiply(Errors[0],learningRate)); //Adjust Bias
+        StringBuilder sb = new StringBuilder();
+        sb.append("I ");
+        sb.append(I.getCols() + "\n");
 
-        //Rest of network
-        for(int i = 1; i<Errors.length;i++){
-            dCdW = Matrix.dot(Matrix.transpose(H[i-1]),Errors[i]);
-
-            W[i].subtract(dCdW); //Adjust Weight
-            B[i].subtract(Matrix.multiply(Errors[i],learningRate)); //Adjust Bias
+        //Add Weights
+        sb.append("W ");sb.append(W.length + "\n");
+        for(int i = 0; i<W.length;i++){
+            sb.append(W[i].toString());
         }
+
+        //Add Biases
+        sb.append("B ");sb.append(B.length + "\n");
+        for(int i = 0; i<B.length;i++){
+            sb.append(B[i].toString());
+        }
+
+        try {
+            FileWriter writer = new FileWriter(file);
+            writer.write(sb.toString());
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // public ANN(int inputs, int[] hidden, int outputs,double learningRate,Function<Double,Double> activation,Function<Double,Double> activationPrime){
+
+    public static ANN loadNetwork(File file) {
+        try {
+            BufferedReader bufferedReader = new BufferedReader(new FileReader(file));
+            String line;
+            Matrix I = null;
+            Matrix[] W = null, B = null;
+            int cols;
+            while ((line = bufferedReader.readLine()) != null) {
+                char c = line.charAt(0);
+
+                switch (c) {
+                    case 'I':
+                        cols = Integer.parseInt(line.substring(2));
+                        I = new Matrix(1, cols);
+                        break;
+                    case 'W':
+                    case 'B':
+                        int length = Integer.parseInt(line.substring(2));
+                        if (c == 'B')
+                            B = new Matrix[length];
+                        else
+                            W = new Matrix[length];
+
+                        for (int i = 0; i < length; i++) {
+                            ArrayList<String> s = new ArrayList<>();
+                            line = bufferedReader.readLine();
+                            if (line.equals("{")) {
+                                while (!(line = bufferedReader.readLine()).equals("}")) {
+                                    s.add(line);
+                                }
+                            }
+                            if (c == 'B')
+                                B[i] = Matrix.toMatrix(s);
+                            else
+                                W[i] = Matrix.toMatrix(s);
+
+                        }
+
+                        break;
+                }
+            }
+            return new ANN(I,W,B);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        throw new RuntimeException("Could not load network");
     }
 
 

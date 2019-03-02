@@ -1,5 +1,6 @@
 package com.jAI.util;
 
+import java.util.ArrayList;
 import java.util.function.Function;
 
 public class Matrix {
@@ -132,8 +133,41 @@ public class Matrix {
         }
     }
 
-    //=====================================STATIC===========================================//
+    public boolean equals(Matrix in){
+        Assert(in.cols == cols && in.rows == rows,"Bad Dimensions");
+        boolean match = true;
 
+        for(int y = 0;y<rows;y++){
+            for(int x = 0; x<cols;x++){
+                if(mat[y][x] != in.mat[y][x])
+                    return false;
+            }
+        }
+        return true;
+    }
+
+    public void normalize(double in_min,double in_max,double out_min, double out_max){
+        double ratio = in_min/in_max;
+
+        for(int y = 0; y<rows;y++){
+            for(int x = 0;x<cols;x++){
+                double val = mat[y][x]/(in_max-in_min);
+                mat[y][x] = out_min + (out_max-out_min)*val;
+            }
+        }
+    }
+
+    //=====================================STATIC===========================================//
+    public static void normalize_array(double[][] arr, double in_min,double in_max,double out_min, double out_max){
+        double ratio = in_min/in_max;
+
+        for(int y = 0; y<arr.length;y++){
+            for(int x = 0;x<arr[0].length;x++){
+                double val = arr[y][x]/(in_max-in_min);
+                arr[y][x] = out_min + (out_max-out_min)*val;
+            }
+        }
+    }
     //Dot product Matrices
     public static Matrix dot(Matrix m1, Matrix m2) {
         Assert(m1.cols == m2.rows, "Bad Dimensions");
@@ -255,14 +289,44 @@ public class Matrix {
         return arr;
     }
 
+    public static Matrix toMatrix(ArrayList<String> matString){
+        int xIndex = matString.get(0).indexOf("x");
+        int rows = Integer.parseInt(matString.get(0).substring(0,xIndex));
+        int cols = Integer.parseInt(matString.get(0).substring(xIndex+1));
+
+        Matrix m = new Matrix(rows,cols);
+
+        for(int y = 0; y<rows;y++){
+            int begIndex = 0;
+            for(int x = 0; x<cols;x++){
+                int endOfNum = matString.get(y+1).indexOf(" ",begIndex);
+                double val = Double.parseDouble(matString.get(y+1).substring(begIndex,endOfNum));
+                m.mat[y][x] = val;
+                begIndex = endOfNum+1;
+            }
+        }
+        return m;
+    }
+
     //Print out matrix
     public void print() {
+        System.out.println(toString());
+    }
+
+    public String toString(){
+        StringBuilder sb = new StringBuilder();
+        String dim = rows+"x"+cols+"\n";
+        sb.append("{\n");
+        sb.append(dim);
         for (int y = 0; y < rows; y++) {
             for (int x = 0; x < cols; x++) {
-                System.out.print(mat[y][x] + " ");
+                sb.append(mat[y][x]);
+                sb.append(' ');
             }
-            System.out.println();
+            sb.append('\n');
         }
+        sb.append("}\n");
+        return sb.toString();
     }
 
     public Matrix clone(){

@@ -16,4 +16,10 @@ public class Activations {
     public static double tanhPrime(double x){
         return (1-Math.pow(tanh(x),2));
     }
+
+    public static double step(double x){
+        if(x>=0.9)
+            return 1;
+        else return 0;
+    }
 }
