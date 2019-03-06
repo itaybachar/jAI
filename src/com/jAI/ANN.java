@@ -1,6 +1,8 @@
 package com.jAI;
 
+import com.jAI.util.MNISTReader;
 import com.jAI.util.Matrix;
+import com.jAI.util.Pair;
 import com.jAI.util.TrainingSet;
 
 import java.io.*;
@@ -21,15 +23,16 @@ public class ANN {
     private Matrix[] W; //Weights per layer
     private Matrix[] H; //Hidden layer outputs
     private Matrix[] Z; //Weighted Sums from first hidden to output
-    private Matrix I,O; //Input layer and Output layer
-    private Function<Double,Double> activation,activationPrime;
+    private Matrix I, O; //Input layer and Output layer
+    private Function<Double, Double> activation, activationPrime;
+    private boolean verbose = false;
 
-    public ANN(Matrix I, Matrix[] W, Matrix[] B){
+    public ANN(Matrix I, Matrix[] W, Matrix[] B) {
         this.I = I;
         this.W = W;
         this.B = B;
 
-        H = new Matrix[W.length-1];
+        H = new Matrix[W.length - 1];
         Z = new Matrix[W.length];
 
         activation = Activations::sigmoid;
@@ -37,112 +40,214 @@ public class ANN {
         learningRate = 0.1;
     }
 
-    public ANN(int inputs, int[] hidden, int outputs,double learningRate,Function<Double,Double> activation,Function<Double,Double> activationPrime){
+    public ANN(int inputs, int[] hidden, int outputs, double learningRate, Function<Double, Double> activation, Function<Double, Double> activationPrime) {
         //Set Variables
         this.learningRate = learningRate;
         this.activation = activation;
         this.activationPrime = activationPrime;
 
         //Initialize Arrays
-        this.I = new Matrix(1,inputs);
+        this.I = new Matrix(1, inputs);
         this.H = new Matrix[hidden.length];
-        this.W = new Matrix[hidden.length+1];
-        this.B = new Matrix[hidden.length+1];
-        this.Z = new Matrix[hidden.length+1];
+        this.W = new Matrix[hidden.length + 1];
+        this.B = new Matrix[hidden.length + 1];
+        this.Z = new Matrix[hidden.length + 1];
 
         //Initialize Matrices
         //Connection from input layer to first hidden
-        this.W[0] = new Matrix(inputs,hidden[0]);
-        this.B[0] = new Matrix(1,hidden[0]);
+        this.W[0] = new Matrix(inputs, hidden[0]);
+        this.B[0] = new Matrix(1, hidden[0]);
 
         //Connection from hidden layer to next layer
-        for(int i = 1; i<hidden.length;i++){
+        for (int i = 1; i < hidden.length; i++) {
 
             //Initialize matrices
-            this.W[i] = new Matrix(hidden[i-1],hidden[i]);
-            this.B[i] = new Matrix(1,hidden[i]);
+            this.W[i] = new Matrix(hidden[i - 1], hidden[i]);
+            this.B[i] = new Matrix(1, hidden[i]);
 
         }
 
         //Connection of last hidden to output
-        this.W[W.length-1] = new Matrix(hidden[hidden.length-1],outputs);
-        this.B[B.length-1] = new Matrix(1,outputs);
+        this.W[W.length - 1] = new Matrix(hidden[hidden.length - 1], outputs);
+        this.B[B.length - 1] = new Matrix(1, outputs);
 
         //Randomize values
-        for(int i = 0; i<W.length;i++) {
-            this.W[i].randomize(0.00001, 1);
-            this.B[i].randomize(0.00001, 1);
+        for (int i = 0; i < W.length; i++) {
+            this.W[i].randomize(0.001, 1);
+            this.B[i].randomize(0.001, 1);
         }
     }
 
     //Compute the output of an input
-    public Matrix feedForward(double[] inputs){
+    public Matrix feedForward(double[] inputs) {
         //Initialize the inputs
         I.set(new double[][]{inputs});
 
         //Apply to first hidden layer
-        Z[0] = Matrix.dot(I,W[0]);
+        Z[0] = Matrix.dot(I, W[0]);
         Z[0].add(B[0]);
         H[0] = Z[0].clone();
         H[0].applyFunction(activation);
 
         //Apply to rest of hidden layers
-        for(int i = 1; i<H.length;i++){
-            Z[i] = Matrix.dot(H[i-1],W[i]);
+        for (int i = 1; i < H.length; i++) {
+            Z[i] = Matrix.dot(H[i - 1], W[i]);
             Z[i].add(B[i]);
             H[i] = Z[i].clone();
             H[i].applyFunction(activation);
         }
 
         //Apply to output layer
-        Z[Z.length-1] = Matrix.dot(H[H.length-1],W[W.length-1]);
-        Z[Z.length-1].add(B[B.length-1]);
-        O = Z[Z.length-1].clone();
+        Z[Z.length - 1] = Matrix.dot(H[H.length - 1], W[W.length - 1]);
+        Z[Z.length - 1].add(B[B.length - 1]);
+        O = Z[Z.length - 1].clone();
         O.applyFunction(activation);
         return O;
     }
 
     //Set the learning rate
-    public void setLearningRate(double in){
+    public void setLearningRate(double in) {
         this.learningRate = in;
     }
 
-    public void setActivations(Function<Double,Double> activation,Function<Double,Double> activationPrime){
+    //Set activations
+    public void setActivations(Function<Double, Double> activation, Function<Double, Double> activationPrime) {
         this.activation = activation;
         this.activationPrime = activationPrime;
     }
 
-    //Apply gradient descent to the network, this will train on one epoch.
-    public void SGD(double[] target_outputs) {
-        Matrix.Assert(target_outputs.length == O.getCols(), "Bad Dimensions");
+    /**
+     * Teaches the network the data-set using
+     * Stochastic Gradient Descent with mini batches
+     * @param inputs network inputs
+     * @param expected_outputs expected outputs
+     * @param mini_batch_size size per mini batch
+     * @param epochs number of epochs to train
+     */
+    public void SGD(double[][] inputs,double[][] expected_outputs,int mini_batch_size,int epochs, boolean verbose){
+        //Set verbose
+        setVerbose(verbose);
+
+        //Create training set
+        TrainingSet trainingSet = new TrainingSet(inputs,expected_outputs);
+
+        //Loop through Epochs
+        for(int i = 0; i<epochs;i++){
+            //Print Progress
+            print("\rTrained: " + i + "/" + epochs);
+
+            //Shuffle training set
+            trainingSet.shuffle();
+
+            //Create the mini batches
+            TrainingSet.Data[][] mini_batches = createMiniBatches(trainingSet,mini_batch_size);
+
+            //Loop through mini batches
+            for(int j = 0; j<mini_batches.length;j++){
+                update_mini_batch(mini_batches[j]);
+            }
+        }
+
+        //Print Progress
+        print("\rTrained: " + epochs + "/" + epochs);
+        print("\nDone!");
+    }
+
+    /**
+     * Takes a dataset and returns a 2D array containing the data
+     * split up into batches of n size
+     * @param t training set
+     * @param mini_batch_size size per mini batch
+     * @return 2D array of mini batches
+     */
+    private TrainingSet.Data[][] createMiniBatches(TrainingSet t, int mini_batch_size){
+        TrainingSet.Data[][] mini_batches = new TrainingSet.Data[t.getSize()/mini_batch_size][mini_batch_size];
+
+        //Loop Through the entire training set to create batches
+        for(int i = 0; i<mini_batches.length;i++){
+            //Create mini batch array
+            TrainingSet.Data[] mini_batch = new TrainingSet.Data[mini_batch_size];
+
+            //Loop through and fill the array
+            for(int j = 0; j<mini_batch_size;j++){
+                mini_batch[j]= t.data.get(j+(i*mini_batch_size));
+
+                //Add the mini batch to the list
+                mini_batches[i] = mini_batch;
+            }
+        }
+        return mini_batches;
+    }
+
+    /**
+     * Does a whole pass(feed-forward and back-propagate)
+     * with inputs and returns the delta W and B
+     * for the certain input.
+     * @param inputs inputs to net
+     * @param target_outputs expected outputs
+     * @return a pair containing two arrays with the deltas per layer for B and W
+     */
+    private Pair backprop(double[] inputs, double[] target_outputs){
+        //Create Expected output column matrix
         Matrix EO = Matrix.fromArray(new double[][]{target_outputs});
 
-        //Get the Errors
+        //Forward Propagate inputs
+        feedForward(inputs);
+
+        //Get the Errors which is also the Bias Delta
         Matrix[] Errors = calculateError(EO);
 
-        //Apply Error to layers
-        //Start with first weight and bias
-        Matrix dCdW = Matrix.dot(Matrix.transpose(I),Errors[0]);
+        //Weight Delta Matrix
+        Matrix[] dCdW = new Matrix[Errors.length];
 
-        W[0].subtract(dCdW); //Adjust Weight
-        B[0].subtract(Matrix.multiply(Errors[0],learningRate)); //Adjust Bias
+        //Calculate the Deltas
+        //Calculating the first Layers Delta
+        dCdW[0] = Matrix.dot(Matrix.transpose(I),Errors[0]);
 
         //Rest of network
-        for(int i = 1; i<Errors.length;i++){
-            dCdW = Matrix.dot(Matrix.transpose(H[i-1]),Errors[i]);
+        for (int i = 1; i < Errors.length; i++) {
+            dCdW[i] = Matrix.dot(Matrix.transpose(H[i - 1]), Errors[i]);
+        }
 
-            W[i].subtract(dCdW); //Adjust Weight
-            B[i].subtract(Matrix.multiply(Errors[i],learningRate)); //Adjust Bias
+        return new Pair(dCdW,Errors);
+    }
+
+    /**
+     * Updates the Weights and Biases of the network
+     * for a given mini batch
+     * @param mini_batch mini batch
+     */
+    private void update_mini_batch(TrainingSet.Data[] mini_batch){
+        //Get first deltas
+        Pair deltas = backprop(mini_batch[0].input,mini_batch[0].output);
+
+        //Loop through mini batch and sum the deltas
+        for(int i = 1; i< mini_batch.length;i++){
+            deltas.add(backprop(mini_batch[i].input,mini_batch[i].output));
+        }
+
+        //Multiply deltas by the learning rate
+        //and divide by the mini batch size to get
+        //the mean of the deltas
+        deltas.multiply(learningRate/mini_batch.length);
+
+        //Update Weights and Biases
+        for(int i= 0; i<W.length;i++){
+            W[i].subtract(deltas.dCdW[i]);
+            B[i].subtract(deltas.dCdB[i]);
         }
     }
 
-    public void learn_SGD(double[][] inputs,double[][] target_outputs,int epochNum) {
+    public void learn_SGD(double[][] inputs, double[][] target_outputs, int epochNum,boolean verbose) {
+        //Set verbose
+        setVerbose(verbose);
+
         //Create a training set
         TrainingSet trainingSet = new TrainingSet(inputs, target_outputs);
 
         for (int i = 0; i < epochNum; i++) {
             //Print progress
-            System.out.print("\rTrained: " + (i) + "/" + epochNum);
+            print("\rTrained: " + (i) + "/" + epochNum);
 
             //Shuffle set
             trainingSet.shuffle();
@@ -153,142 +258,80 @@ public class ANN {
 
                 //Feedforward and backpropagate
                 feedForward(current.input);
-                SGD(current.output);
+
             }
 
         }
-        System.out.print("\rTrained: " + epochNum + "/" + epochNum);
-        System.out.println("\nDone!");
+        print("\rTrained: " + epochNum + "/" + epochNum);
+        print("\nDone!");
     }
 
-    public void test(double[][] inputs, double[][] target_outputs, int test_num){
-        TrainingSet trainingSet = new TrainingSet(inputs,target_outputs);
+    public void test_network(double[][] inputs, double[][] target_outputs, int test_num) {
+        setVerbose(true);
+        TrainingSet trainingSet = new TrainingSet(inputs, target_outputs);
 
         int correct = 0;
         int tested = 0;
-        for(int i = 0; i<test_num;i++){
+        for (int i = 0; i < test_num; i++) {
             TrainingSet.Data data = trainingSet.pickRandom();
-            Matrix res =feedForward(data.input);
+            Matrix res = feedForward(data.input);
             res.applyFunction(Activations::step);
 
             tested++;
-            if(res.equals(Matrix.fromArray(new double[][]{data.output})))
+            if (res.equals(Matrix.fromArray(new double[][]{data.output})))
                 correct++;
 
             DecimalFormat decimalFormat = new DecimalFormat("#.##%");
-            System.out.print("\r" + decimalFormat.format((double)correct/tested) + " Correct");
+            print("\r" + decimalFormat.format((double) correct / tested) + " Correct");
         }
-        System.out.println();
+       print("\n");
     }
 
-
-    public void learn_minibatch(double[][] inputs,double[][] target_outputs,int minibatch_size){
-        //Create and shuffle training set
-        TrainingSet trainingSet = new TrainingSet(inputs, target_outputs);
-
-    }
-
-    //Apply Stochastic Gradient descent to a network given a dataset, this will train on one epoch.
-    public void mini_batch(double[][] inputs,double[][] target_outputs,int minibatch_size,boolean verbose) {
-        //Create and shuffle training set
-        TrainingSet trainingSet = new TrainingSet(inputs, target_outputs);
-        trainingSet.shuffle();
-
-        //Train through the minibatches
-        for (int i = 0; i < trainingSet.getSize() / minibatch_size; i++) {
-            Matrix[] Errors = new Matrix[H.length + 1];
-            Matrix[] wErrors = new Matrix[H.length+1];
-
-            //Forward propagate through the data and add errors
-            for (int j = 0; j < minibatch_size; j++) {
-                TrainingSet.Data data = trainingSet.data.get(i * minibatch_size + j);
-
-                //Feed Forward
-                feedForward(data.input);
-
-                //Set the Expected Output
-                Matrix EO = Matrix.fromArray(new double[][]{data.output});
-
-                //Set the Errors if first iteration
-                if (j == 0) {
-                    Errors = calculateError(EO);
-
-                    wErrors[0] = Matrix.dot(Matrix.transpose(I),Errors[0]);
-                    for(int l = 1; l<Errors.length;l++) {
-                        wErrors[l] = Matrix.dot(Matrix.transpose(H[l - 1]), Errors[l]);
-                    }
-                } else {
-                    Matrix[] currentErrors = calculateError(EO);
-                    Matrix[] currentWErrors = new Matrix[H.length+1];
-
-                    currentWErrors[0] = Matrix.dot(Matrix.transpose(I),currentErrors[0]);
-                    for(int l = 1; l<Errors.length;l++) {
-                        currentWErrors[l] = Matrix.dot(Matrix.transpose(H[l - 1]), currentErrors[l]);
-                    }
-
-                    //Sum up the Errors
-                    for (int k = 0; k < currentErrors.length; k++) {
-                        Errors[k].add(currentErrors[k]);
-                    }
-                }
-            }
-
-            //Average the values
-            for (int j = 0; j < Errors.length; j++) {
-                Errors[j].divide(minibatch_size);
-                wErrors[j].divide(minibatch_size);
-            }
-
-            //Apply the errors
-//            applyErrors(Errors);
-
-            W[0].subtract(wErrors[0]); //Adjust Weight
-            B[0].subtract(Matrix.multiply(Errors[0],learningRate)); //Adjust Bias
-
-            //Rest of network
-            for(int l = 1; l<Errors.length;l++){
-                W[l].subtract(wErrors[l]); //Adjust Weight
-                B[l].subtract(Matrix.multiply(Errors[l],learningRate)); //Adjust Bias
-            }
-
-            if (verbose)
-                System.out.println("Finished minibatch #" + (i + 1));
-        }
-    }
 
     //Calculate the layer error with backpropagation
-    private Matrix[] calculateError(Matrix target){
-        Matrix[] Errors = new Matrix[H.length+1];
+    private Matrix[] calculateError(Matrix target) {
+        Matrix[] Errors = new Matrix[H.length + 1];
 
         //Calculate output Error
-        Errors[Errors.length-1] = O.clone();
-        Errors[Errors.length-1].subtract(target);
-        Errors[Errors.length-1].hadamard(Matrix.applyFunction(Z[Z.length-1],activationPrime));
+        Errors[Errors.length - 1] = O.clone();
+        Errors[Errors.length - 1].subtract(target);
+        Errors[Errors.length - 1].hadamard(Matrix.applyFunction(Z[Z.length - 1], activationPrime));
 
         //Calculate hidden errors
-        for(int i = Errors.length-2; i>=0;i--){
-            Errors[i] = Matrix.dot(Errors[i+1],Matrix.transpose(W[i+1]));
-            Errors[i].hadamard(Matrix.applyFunction(Z[i],activationPrime));
+        for (int i = Errors.length - 2; i >= 0; i--) {
+            Errors[i] = Matrix.dot(Errors[i + 1], Matrix.transpose(W[i + 1]));
+            Errors[i].hadamard(Matrix.applyFunction(Z[i], activationPrime));
         }
         return Errors;
     }
 
-    public void saveNetwork(String path, String name){
-        File file = new File(path+name+".ann");
+    private void print(String message){
+        if(verbose)
+            System.out.print(message);
+    }
+
+    public void setVerbose(boolean verbose){
+        this.verbose = verbose;
+    }
+
+    public void saveNetwork(String path, String name) {
+        File file = new File(path + name + ".ann");
 
         StringBuilder sb = new StringBuilder();
         sb.append("I ");
         sb.append(I.getCols() + "\n");
 
         //Add Weights
-        sb.append("W ");sb.append(W.length + "\n");
-        for(int i = 0; i<W.length;i++){
+        sb.append("W ");
+        sb.append(W.length + "\n");
+        for (int i = 0; i < W.length; i++) {
             sb.append(W[i].toString());
         }
 
         //Add Biases
-        sb.append("B ");sb.append(B.length + "\n");
-        for(int i = 0; i<B.length;i++){
+        sb.append("B ");
+        sb.append(B.length + "\n");
+        for (int i = 0; i < B.length; i++) {
             sb.append(B[i].toString());
         }
 
@@ -300,8 +343,6 @@ public class ANN {
             e.printStackTrace();
         }
     }
-
-    // public ANN(int inputs, int[] hidden, int outputs,double learningRate,Function<Double,Double> activation,Function<Double,Double> activationPrime){
 
     public static ANN loadNetwork(File file) {
         try {
@@ -344,12 +385,11 @@ public class ANN {
                         break;
                 }
             }
-            return new ANN(I,W,B);
+            return new ANN(I, W, B);
         } catch (IOException e) {
             e.printStackTrace();
         }
         throw new RuntimeException("Could not load network");
     }
-
 
 }

@@ -5,57 +5,48 @@ import com.jAI.util.Matrix;
 import com.jAI.util.TrainingSet;
 
 import java.io.File;
-import java.util.List;
 
 public class test {
 
-    public static void annTest() {
-        double[][] data = {
-                {1, 1},
-                {1, 0},
-                {0, 1},
-                {0, 0}
+    public static void xor(){
+        double[][] data ={
+                {1,1},
+                {0,0},
+                {1,0},
+                {0,1}
         };
 
-        double[][] out = {{0}, {1}, {1}, {0}};
+        double[][] outs = {
+                {0},
+                {0},
+                {1},
+                {1}
+        };
 
-        ANN brain = new ANN(2, new int[]{5}, 1, 0.1, Activations::sigmoid, Activations::sigmoidPrime);
 
-        brain.learn_SGD(data,out,10);
+        ANN brain = new ANN(2,new int[]{5},1,0.01,Activations::sigmoid,Activations::sigmoidPrime);
 
-        brain.test(data,out,100);
-        brain.saveNetwork("/home/itay/Desktop/","XOR");
+        brain.SGD(data,outs,1,150000,true);
+        brain.test_network(data,outs,100);
     }
 
     public static void mnistTest() {
         File imgFile = new File("/home/itay/Desktop/HandwrittenDigits/train-images.idx3-ubyte");
         File labelFile = new File("/home/itay/Desktop/HandwrittenDigits/train-labels.idx1-ubyte");
-        double[][] img = MNISTReader.loadImages(imgFile,true);
+        double[][] img = MNISTReader.loadImages(imgFile, true);
         double[] label = MNISTReader.loadLabels(labelFile);
         double[][] outs = MNISTReader.labelToNNOutputs(label);
 
-        ANN brain = new ANN(img[0].length, new int[]{14}, 10, 0.1, Activations::sigmoid, Activations::sigmoidPrime);
+        ANN brain = new ANN(img[0].length, new int[]{14}, outs[0].length, 0.01, Activations::sigmoid, Activations::sigmoidPrime);
 
-        brain.learn_SGD(img,outs,30);
+        brain.SGD(img, outs, 1, 30, true);
 
-        brain.test(img,outs,1000);
+        brain.test_network(img, outs, 1000);
 
-        brain.saveNetwork("/home/itay/Desktop/","MNIST");
+        brain.saveNetwork("/home/itay/Desktop/", "MNIST");
     }
 
     public static void main(String[] args){
-        mnistTest();
-//        File imgFile = new File("/home/itay/Desktop/HandwrittenDigits/train-images.idx3-ubyte");
-//        File labelFile = new File("/home/itay/Desktop/HandwrittenDigits/train-labels.idx1-ubyte");
-//        double[][] img = MNISTReader.loadImages(imgFile, true);
-//        double[] label = MNISTReader.loadLabels(labelFile);
-//        double[][] outs = MNISTReader.labelToNNOutputs(label);
-//
-//        ANN net = ANN.loadNetwork(new File("/home/itay/Desktop/MNIST.ann"));
-////        net.setActivations(Activations::tanh,Activations::tanhPrime);
-//        net.feedForward(img[0]).print();
-//        net.feedForward(img[10]).print();
-//
-//        net.test(img,outs,100);
+       mnistTest();
     }
 }

@@ -14,6 +14,7 @@ public class TrainingSet {
         }
     }
 
+
     //Shuffles the training set
     public void shuffle(){
         for(int i = data.size()-1;i>0;i--){
