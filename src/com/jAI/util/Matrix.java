@@ -308,6 +308,40 @@ public class Matrix {
         return m;
     }
 
+    /**
+     * Finds the coordinates of the largest value in array
+     * @return int[] of 2 elements, row and col
+     */
+    public int[] getCoordsOfMax(){
+        int[] coords = new int[2];
+        double max = Double.MIN_VALUE;
+        for(int y = 0; y<rows;y++){
+            for(int x = 0; x<cols;x++){
+               if(mat[y][x]>max){
+                   max = mat[y][x];
+                   coords[0] = y;
+                   coords[1] = x;
+               }
+            }
+        }
+        return coords;
+    }
+
+    public int[] getCoordsOfMin(){
+        int[] coords = new int[2];
+        double min = Double.MAX_VALUE;
+        for(int y = 0; y<rows;y++){
+            for(int x = 0; x<cols;x++){
+                if(mat[y][x]>min){
+                    min = mat[y][x];
+                    coords[0] = y;
+                    coords[1] = x;
+                }
+            }
+        }
+        return coords;
+    }
+
     //Print out matrix
     public void print() {
         System.out.println(toString());

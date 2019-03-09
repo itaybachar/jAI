@@ -46,7 +46,30 @@ public class test {
         brain.saveNetwork("/home/itay/Desktop/", "MNIST");
     }
 
+    public static void fashion(){
+        File imgFile = new File("/home/itay/Desktop/Fashion/train-images-idx3-ubyte");
+        File labelFile = new File("/home/itay/Desktop/Fashion/train-labels-idx1-ubyte");
+        double[][] img = MNISTReader.loadImages(imgFile, true);
+        double[] label = MNISTReader.loadLabels(labelFile);
+        double[][] outs = MNISTReader.labelToNNOutputs(label);
+
+        ANN brain = new ANN(img[0].length, new int[]{20}, outs[0].length, 0.1, Activations::sigmoid, Activations::sigmoidPrime);
+
+        brain.SGD(img, outs, 1, 10, true);
+
+        brain.saveNetwork("/home/itay/Desktop/", "FASH");
+    }
+
     public static void main(String[] args){
-       mnistTest();
+       fashion();
+        File imgFile = new File("/home/itay/Desktop/HandwrittenDigits/train-images.idx3-ubyte");
+        File labelFile = new File("/home/itay/Desktop/HandwrittenDigits/train-labels.idx1-ubyte");
+        double[][] img = MNISTReader.loadImages(imgFile, true);
+        double[] label = MNISTReader.loadLabels(labelFile);
+        double[][] outs = MNISTReader.labelToNNOutputs(label);
+        ANN net = new ANN(img[0].length, new int[]{5}, outs[0].length, 0.1, Activations::sigmoid, Activations::sigmoidPrime);
+
+//        ANN net = ANN.loadNetwork(new File("/home/itay/Desktop/FASH.ann"));
+        net.test_network(img,outs,img.length);
     }
 }

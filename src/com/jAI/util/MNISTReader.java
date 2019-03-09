@@ -42,7 +42,7 @@ public class MNISTReader {
 
                 //Normalize Array to values between 0-1
                 if(normalize)
-                    Matrix.normalize_array(images,0,255,-1,1);
+                    Matrix.normalize_array(images,0,255,0,1);
 
                 //Verbose Output
                 System.out.println("Images Loaded!");

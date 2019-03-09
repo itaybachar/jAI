@@ -16,6 +16,7 @@ import java.util.function.Function;
  * This supports multiple hidden layers but still uses GD which
  * does not work well with a deep net.
  */
+
 public class ANN {
 
     private double learningRate;
@@ -256,7 +257,7 @@ public class ANN {
                 //Get next data set
                 TrainingSet.Data current = trainingSet.data.get(j);
 
-                //Feedforward and backpropagate
+                //Feedforward and back-propagate
                 feedForward(current.input);
 
             }
@@ -275,10 +276,9 @@ public class ANN {
         for (int i = 0; i < test_num; i++) {
             TrainingSet.Data data = trainingSet.pickRandom();
             Matrix res = feedForward(data.input);
-            res.applyFunction(Activations::step);
 
             tested++;
-            if (res.equals(Matrix.fromArray(new double[][]{data.output})))
+            if (res.getCoordsOfMax()[1] == Matrix.fromArray(new double[][]{data.output}).getCoordsOfMax()[1])
                 correct++;
 
             DecimalFormat decimalFormat = new DecimalFormat("#.##%");
