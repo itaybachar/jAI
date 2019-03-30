@@ -1,8 +1,6 @@
 import com.jAI.ANN;
 import com.jAI.Activations;
 import com.jAI.util.MNISTReader;
-import com.jAI.util.Matrix;
-import com.jAI.util.TrainingSet;
 
 import java.io.File;
 
@@ -31,8 +29,8 @@ public class test {
     }
 
     public static void mnistTest() {
-        File imgFile = new File("/home/itay/Desktop/HandwrittenDigits/train-images.idx3-ubyte");
-        File labelFile = new File("/home/itay/Desktop/HandwrittenDigits/train-labels.idx1-ubyte");
+        File imgFile = new File("C:\\Users\\itayb\\Desktop\\MNIST\\train-images.idx3-ubyte");
+        File labelFile = new File("C:\\Users\\itayb\\Desktop\\MNIST\\train-labels.idx1-ubyte");
         double[][] img = MNISTReader.loadImages(imgFile, true);
         double[] label = MNISTReader.loadLabels(labelFile);
         double[][] outs = MNISTReader.labelToNNOutputs(label);
@@ -61,15 +59,7 @@ public class test {
     }
 
     public static void main(String[] args){
-       fashion();
-        File imgFile = new File("/home/itay/Desktop/HandwrittenDigits/train-images.idx3-ubyte");
-        File labelFile = new File("/home/itay/Desktop/HandwrittenDigits/train-labels.idx1-ubyte");
-        double[][] img = MNISTReader.loadImages(imgFile, true);
-        double[] label = MNISTReader.loadLabels(labelFile);
-        double[][] outs = MNISTReader.labelToNNOutputs(label);
-        ANN net = new ANN(img[0].length, new int[]{5}, outs[0].length, 0.1, Activations::sigmoid, Activations::sigmoidPrime);
 
-//        ANN net = ANN.loadNetwork(new File("/home/itay/Desktop/FASH.ann"));
-        net.test_network(img,outs,img.length);
     }
+
 }

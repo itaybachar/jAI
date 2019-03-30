@@ -189,7 +189,7 @@ public class Matrix {
         Matrix m = new Matrix(in.cols, in.rows);
         for (int y = 0; y < in.rows; y++) {
             for (int x = 0; x < in.cols; x++) {
-                m.set(x, y, in.get(y, x));
+                m.mat[x][y]=in.mat[y][x];
             }
         }
         return m;
@@ -327,12 +327,16 @@ public class Matrix {
         return coords;
     }
 
+    /**
+     * Finds the coordinates of the smallest value in array
+     * @return int[] of 2 elements, row and col
+     */
     public int[] getCoordsOfMin(){
         int[] coords = new int[2];
         double min = Double.MAX_VALUE;
         for(int y = 0; y<rows;y++){
             for(int x = 0; x<cols;x++){
-                if(mat[y][x]>min){
+                if(mat[y][x]<min){
                     min = mat[y][x];
                     coords[0] = y;
                     coords[1] = x;
@@ -344,7 +348,7 @@ public class Matrix {
 
     //Print out matrix
     public void print() {
-        System.out.println(toString());
+        System.out.println(this);
     }
 
     public String toString(){

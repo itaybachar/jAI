@@ -1,6 +1,5 @@
 package com.jAI;
 
-import com.jAI.util.MNISTReader;
 import com.jAI.util.Matrix;
 import com.jAI.util.Pair;
 import com.jAI.util.TrainingSet;
