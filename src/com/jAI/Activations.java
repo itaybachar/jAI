@@ -1,7 +1,10 @@
 package com.jAI;
 
-import com.jAI.util.Matrix;
-
+/**
+ * Class that stores Activation functions and their derivatives
+ * can be accessed as such:
+ * Activations::*Function name*
+ */
 public class Activations {
     public static double sigmoid(double x){
         return 1.0/(1.0+Math.exp(-x));

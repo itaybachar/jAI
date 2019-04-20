@@ -1,20 +1,28 @@
 package com.jAI.util;
 
 /**
- * This is a pair class, which holds two error deltas,
- * This was part of javafx but since it was removed I made one.
- *
+ * This class holds a pair of Matrix arrays.
+ * This have the Weight error and the bias error per layer.
  */
 
 public class Pair{
-    public final Matrix[] dCdW;
-    public final Matrix[] dCdB;
+    public Matrix[] dCdW; //Weight Delta
+    public Matrix[] dCdB; //Bias Delta
 
+    /**
+     * Constructor to initialize Pair with the errors
+     * @param first Weight Errors
+     * @param second Bias Errors
+     */
     public Pair(Matrix[] first, Matrix[] second){
         this.dCdW = first;
         this.dCdB = second;
     }
 
+    /**
+     * Add two pairs together
+     * @param p pair to add
+     */
     public void add(Pair p){
         for(int i = 0; i<dCdW.length;i++){
             dCdW[i].add(p.dCdW[i]);
@@ -22,6 +30,10 @@ public class Pair{
         }
     }
 
+    /**
+     * Multiply by a scalar value
+     * @param scalar value to multiply
+     */
     public void multiply(double scalar){
         for(int i = 0; i<dCdW.length;i++){
             dCdW[i].multiply(scalar);

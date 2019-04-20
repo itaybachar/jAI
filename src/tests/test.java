@@ -1,3 +1,5 @@
+package tests;
+
 import com.jAI.ANN;
 import com.jAI.Activations;
 import com.jAI.util.MNISTReader;
@@ -24,7 +26,7 @@ public class test {
 
         ANN brain = new ANN(2,new int[]{5},1,0.01,Activations::sigmoid,Activations::sigmoidPrime);
 
-        brain.SGD(data,outs,1,150000,true);
+        brain.SGD(data,outs,1,150000);
         brain.test_network(data,outs,100);
     }
 
@@ -37,7 +39,7 @@ public class test {
 
         ANN brain = new ANN(img[0].length, new int[]{14}, outs[0].length, 0.01, Activations::sigmoid, Activations::sigmoidPrime);
 
-        brain.SGD(img, outs, 1, 30, true);
+        brain.SGD(img, outs, 1, 30);
 
         brain.test_network(img, outs, 1000);
 
@@ -53,12 +55,13 @@ public class test {
 
         ANN brain = new ANN(img[0].length, new int[]{20}, outs[0].length, 0.1, Activations::sigmoid, Activations::sigmoidPrime);
 
-        brain.SGD(img, outs, 1, 10, true);
+        brain.SGD(img, outs, 1, 10);
 
         brain.saveNetwork("/home/itay/Desktop/", "FASH");
     }
 
     public static void main(String[] args){
+        mnistTest();
 
     }
 

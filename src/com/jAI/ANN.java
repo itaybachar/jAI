@@ -24,10 +24,18 @@ public class ANN {
     private Matrix[] H; //Hidden layer outputs
     private Matrix[] Z; //Weighted Sums from first hidden to output
     private Matrix I, O; //Input layer and Output layer
-    private Function<Double, Double> activation, activationPrime;
-    private boolean verbose = false;
+    private Function<Double, Double> activation, activationPrime; //Activation function and its derivative
+    private boolean verbose = true; //NN will print outputs.
 
-    public ANN(Matrix I, Matrix[] W, Matrix[] B) {
+    /**
+     * Constructor used to initialize a network with a
+     * file, this is called from the loadNetwork Method.
+     * Default Activation function is sigmoid.
+     * @param I Input Matrix
+     * @param W Weight Matrices
+     * @param B Bias Matrices
+     */
+    private ANN(Matrix I, Matrix[] W, Matrix[] B) {
         this.I = I;
         this.W = W;
         this.B = B;
@@ -40,6 +48,15 @@ public class ANN {
         learningRate = 0.1;
     }
 
+    /**
+     * Constructor used to initialize a new neural network
+     * @param inputs Number of input neurons
+     * @param hidden array indicating number of hidden neurons per hidden layer
+     * @param outputs number of possible outputs
+     * @param learningRate the learning rate of the network
+     * @param activation activation function
+     * @param activationPrime derivative of the activation
+     */
     public ANN(int inputs, int[] hidden, int outputs, double learningRate, Function<Double, Double> activation, Function<Double, Double> activationPrime) {
         //Set Variables
         this.learningRate = learningRate;
@@ -78,7 +95,11 @@ public class ANN {
         }
     }
 
-    //Compute the output of an input
+    /**
+     * Compute the output of the network for a single input
+     * @param inputs inputs per neuron
+     * @return Output Matrix
+     */
     public Matrix feedForward(double[] inputs) {
         //Initialize the inputs
         I.set(new double[][]{inputs});
@@ -105,12 +126,19 @@ public class ANN {
         return O;
     }
 
-    //Set the learning rate
+    /**
+     * Set the learning rate
+     * @param in new learning rate
+     */
     public void setLearningRate(double in) {
         this.learningRate = in;
     }
 
-    //Set activations
+    /**
+     * Set the activation functions
+     * @param activation new activation
+     * @param activationPrime new derivative
+     */
     public void setActivations(Function<Double, Double> activation, Function<Double, Double> activationPrime) {
         this.activation = activation;
         this.activationPrime = activationPrime;
@@ -124,10 +152,7 @@ public class ANN {
      * @param mini_batch_size size per mini batch
      * @param epochs number of epochs to train
      */
-    public void SGD(double[][] inputs,double[][] expected_outputs,int mini_batch_size,int epochs, boolean verbose){
-        //Set verbose
-        setVerbose(verbose);
-
+    public void SGD(double[][] inputs,double[][] expected_outputs,int mini_batch_size,int epochs){
         //Create training set
         TrainingSet trainingSet = new TrainingSet(inputs,expected_outputs);
 
@@ -161,7 +186,7 @@ public class ANN {
      * @return 2D array of mini batches
      */
     private TrainingSet.Data[][] createMiniBatches(TrainingSet t, int mini_batch_size){
-        TrainingSet.Data[][] mini_batches = new TrainingSet.Data[t.getSize()/mini_batch_size][mini_batch_size];
+        TrainingSet.Data[][] mini_batches = new TrainingSet.Data[t.size()/mini_batch_size][mini_batch_size];
 
         //Loop Through the entire training set to create batches
         for(int i = 0; i<mini_batches.length;i++){
@@ -170,7 +195,7 @@ public class ANN {
 
             //Loop through and fill the array
             for(int j = 0; j<mini_batch_size;j++){
-                mini_batch[j]= t.data.get(j+(i*mini_batch_size));
+                mini_batch[j]= t.get(j+(i*mini_batch_size));
 
                 //Add the mini batch to the list
                 mini_batches[i] = mini_batch;
@@ -238,34 +263,12 @@ public class ANN {
         }
     }
 
-    public void learn_SGD(double[][] inputs, double[][] target_outputs, int epochNum,boolean verbose) {
-        //Set verbose
-        setVerbose(verbose);
-
-        //Create a training set
-        TrainingSet trainingSet = new TrainingSet(inputs, target_outputs);
-
-        for (int i = 0; i < epochNum; i++) {
-            //Print progress
-            print("\rTrained: " + (i) + "/" + epochNum);
-
-            //Shuffle set
-            trainingSet.shuffle();
-
-            for (int j = 0; j < trainingSet.getSize(); j++) {
-                //Get next data set
-                TrainingSet.Data current = trainingSet.data.get(j);
-
-                //Feedforward and back-propagate
-                feedForward(current.input);
-
-            }
-
-        }
-        print("\rTrained: " + epochNum + "/" + epochNum);
-        print("\nDone!");
-    }
-
+    /**
+     * Test the network on given inputs and get accuracy
+     * @param inputs tests.test inputs
+     * @param target_outputs expected outputs
+     * @param test_num number of tests to run
+     */
     public void test_network(double[][] inputs, double[][] target_outputs, int test_num) {
         setVerbose(true);
         TrainingSet trainingSet = new TrainingSet(inputs, target_outputs);
@@ -287,7 +290,12 @@ public class ANN {
     }
 
 
-    //Calculate the layer error with backpropagation
+    /**
+     * Calculate the Error of the network using a target output.
+     * This uses gradient descent to get the Errors per layer of the network
+      * @param target expected output
+     * @return Error Matrix per layer
+     */
     private Matrix[] calculateError(Matrix target) {
         Matrix[] Errors = new Matrix[H.length + 1];
 
@@ -304,15 +312,28 @@ public class ANN {
         return Errors;
     }
 
+    /**
+     * Prints out message to console if NN is verbose
+     * @param message message to print
+     */
     private void print(String message){
         if(verbose)
             System.out.print(message);
     }
 
+    /**
+     * Setting the verbosity of the Network
+     * @param verbose is verbose
+     */
     public void setVerbose(boolean verbose){
         this.verbose = verbose;
     }
 
+    /**
+     * Save current Neural network as a .ann file.
+     * @param path path to desired save locations
+     * @param name name of the file/network
+     */
     public void saveNetwork(String path, String name) {
         File file = new File(path + name + ".ann");
 
@@ -343,6 +364,11 @@ public class ANN {
         }
     }
 
+    /**
+     * Load a neural network from a .ann file
+     * @param file File of saved network
+     * @return ANN object that has saved values
+     */
     public static ANN loadNetwork(File file) {
         try {
             BufferedReader bufferedReader = new BufferedReader(new FileReader(file));
