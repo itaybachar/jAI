@@ -19,8 +19,8 @@ import java.util.function.Function;
 public class ANN {
 
     private double learningRate;
-    private Matrix[] B; //Bias per layer
-    private Matrix[] W; //Weights per layer
+    public Matrix[] B; //Bias per layer
+    public Matrix[] W; //Weights per layer
     private Matrix[] H; //Hidden layer outputs
     private Matrix[] Z; //Weighted Sums from first hidden to output
     private Matrix I, O; //Input layer and Output layer
@@ -90,9 +90,10 @@ public class ANN {
 
         //Randomize values
         for (int i = 0; i < W.length; i++) {
-            this.W[i].randomize(0.001, 1);
-            this.B[i].randomize(0.001, 1);
+            this.W[i].randomize(-0.1, 0.1);
+            this.B[i].randomize(-0.1, 0.1);
         }
+
     }
 
     /**
@@ -144,6 +145,29 @@ public class ANN {
         this.activationPrime = activationPrime;
     }
 
+    public void learn(double[][] inputs,double[][] exp,int batchSize,int loops,int epochs){
+        //Create training set
+        TrainingSet trainingSet = new TrainingSet(inputs,exp);
+
+        for(int epoch = 0; epoch<epochs;epoch++){
+            //Print Progress
+            print("\rTrained: " + epoch + "/" + epochs);
+
+            //Shuffle training set
+            trainingSet.shuffle();
+
+            //Create the mini batches
+            TrainingSet.Data[][] mini_batches = createMiniBatches(trainingSet,batchSize);
+
+            for(int loop = 0; loop<loops;loop++){
+                update_mini_batch(mini_batches[loop]);
+            }
+        }
+        //Print Progress
+        print("\rTrained: " + epochs + "/" + epochs);
+        print("\nDone!");
+    }
+
     /**
      * Teaches the network the data-set using
      * Stochastic Gradient Descent with mini batches
@@ -178,6 +202,20 @@ public class ANN {
         print("\nDone!");
     }
 
+    public double MSE(TrainingSet.Data[] batch){
+        double sum = 0;
+
+        for(int i = 0; i<batch.length;i++) {
+            Matrix out = feedForward(batch[i].input);
+
+            for (int neuron = 0; neuron < out.getCols(); neuron++) {
+                sum += (batch[i].output[neuron] - out.get(0,neuron)*(batch[i].output[neuron] - out.get(0,neuron)));
+            }
+        }
+
+        return sum/(2*10*batch.length);
+    }
+
     /**
      * Takes a dataset and returns a 2D array containing the data
      * split up into batches of n size
@@ -185,7 +223,7 @@ public class ANN {
      * @param mini_batch_size size per mini batch
      * @return 2D array of mini batches
      */
-    private TrainingSet.Data[][] createMiniBatches(TrainingSet t, int mini_batch_size){
+    public TrainingSet.Data[][] createMiniBatches(TrainingSet t, int mini_batch_size){
         TrainingSet.Data[][] mini_batches = new TrainingSet.Data[t.size()/mini_batch_size][mini_batch_size];
 
         //Loop Through the entire training set to create batches
@@ -212,7 +250,7 @@ public class ANN {
      * @param target_outputs expected outputs
      * @return a pair containing two arrays with the deltas per layer for B and W
      */
-    private Pair backprop(double[] inputs, double[] target_outputs){
+    public Pair backprop(double[] inputs, double[] target_outputs){
         //Create Expected output column matrix
         Matrix EO = Matrix.fromArray(new double[][]{target_outputs});
 
@@ -242,7 +280,7 @@ public class ANN {
      * for a given mini batch
      * @param mini_batch mini batch
      */
-    private void update_mini_batch(TrainingSet.Data[] mini_batch){
+    public void update_mini_batch(TrainingSet.Data[] mini_batch){
         //Get first deltas
         Pair deltas = backprop(mini_batch[0].input,mini_batch[0].output);
 
@@ -304,7 +342,7 @@ public class ANN {
         Errors[Errors.length - 1].subtract(target);
         Errors[Errors.length - 1].hadamard(Matrix.applyFunction(Z[Z.length - 1], activationPrime));
 
-        //Calculate hidden errors
+        //Calculate hidden jAI2.functions.errors
         for (int i = Errors.length - 2; i >= 0; i--) {
             Errors[i] = Matrix.dot(Errors[i + 1], Matrix.transpose(W[i + 1]));
             Errors[i].hadamard(Matrix.applyFunction(Z[i], activationPrime));

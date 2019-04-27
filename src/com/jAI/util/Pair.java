@@ -10,7 +10,7 @@ public class Pair{
     public Matrix[] dCdB; //Bias Delta
 
     /**
-     * Constructor to initialize Pair with the errors
+     * Constructor to initialize Pair with the jAI2.functions.errors
      * @param first Weight Errors
      * @param second Bias Errors
      */

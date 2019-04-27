@@ -1,0 +1,46 @@
+package jAI2;
+
+import jAI2.layers.InputLayer;
+import jAI2.layers.Layer;
+import jAI2.layers.OutputLayer;
+import jAI2.util.TrainingSet3D;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+
+public class Network {
+    private InputLayer input;
+    private OutputLayer output;
+
+    public InputLayer getInput() {
+        return input;
+    }
+
+    public Network setInputLayer(InputLayer input) {
+        this.input = input;
+        return this;
+    }
+
+    public OutputLayer getOutput() {
+        return output;
+    }
+
+    public Network setOutputLayer(OutputLayer output) {
+        this.output = output;
+        return this;
+    }
+
+
+    /**
+     * Trains the network using SGD with mini-batches
+     *
+     * @param data Training set of data
+     * @param minibatch_size data entries per batch
+     * @param batches_per_epoch how many batches to train on the network, if -1 then will train on the whole dataset
+     * @param epochs number of epochs
+     * @param learningRate the learning rate of the system
+     */
+    public void train(TrainingSet3D data,int minibatch_size,int batches_per_epoch, int epochs,double learningRate){
+
+    }
+}
