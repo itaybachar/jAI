@@ -83,6 +83,14 @@ public abstract class Layer {
                 in[0][0].length == input_height;
     }
 
+    public void isMatchingDimensions(double[][][] in,double[][][] in2){
+        if( !(in.length == in2.length &&
+                in[0].length == in2[0].length&&
+                in[0][0].length == in2[0][0].length)){
+
+        }
+    }
+
     public double[][][] getOutput_derivatives() {
         return output_derivatives;
     }
@@ -110,4 +118,6 @@ public abstract class Layer {
     public int getOutput_height() {
         return output_height;
     }
+
+    public abstract void printWeights();
 }

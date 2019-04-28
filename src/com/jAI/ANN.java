@@ -229,14 +229,10 @@ public class ANN {
         //Loop Through the entire training set to create batches
         for(int i = 0; i<mini_batches.length;i++){
             //Create mini batch array
-            TrainingSet.Data[] mini_batch = new TrainingSet.Data[mini_batch_size];
 
             //Loop through and fill the array
             for(int j = 0; j<mini_batch_size;j++){
-                mini_batch[j]= t.get(j+(i*mini_batch_size));
-
-                //Add the mini batch to the list
-                mini_batches[i] = mini_batch;
+                mini_batches[i][j]= t.get(j+(i*mini_batch_size));
             }
         }
         return mini_batches;

@@ -48,4 +48,7 @@ public class OutputLayer extends Layer{
     public void updateWeights(double learning_rate) {
 
     }
+
+    @Override
+    public void printWeights(){}
 }

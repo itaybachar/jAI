@@ -10,7 +10,7 @@ public class DenseLayer extends Layer {
     double[][] weights;
     double[] bias;
 
-    private double lowerBiasRange =0 ,higherBiasRange = 1;
+    private double lowerBiasRange =-1 ,higherBiasRange = 1;
     private double lowerWeightRange = Double.NaN,higherWeightRange = Double.NaN;
 
     private ActivationFunction activationFunction;

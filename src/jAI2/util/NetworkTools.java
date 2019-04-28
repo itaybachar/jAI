@@ -42,4 +42,16 @@ public class NetworkTools {
         sb.append("}\n");
         System.out.println(sb);
     }
+
+    public static double[][][] to3DArray(double[][] in){
+        return new double[][][]{in};
+    }
+
+    public static double[][][] to3DArray(double[] in){
+        return new double[][][]{{in}};
+    }
+
+    public static double[][] to2DArray(double[] in){
+        return new double[][]{in};
+    }
 }

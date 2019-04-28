@@ -15,6 +15,7 @@ public class NetworkBuilder {
 
     public NetworkBuilder(int input_depth,int input_width,int input_height){
         input = new InputLayer(input_depth,input_width,input_height);
+        layers = new ArrayList<>();
     }
 
     public Network createNetwork() {
