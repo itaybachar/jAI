@@ -42,9 +42,9 @@ public class DenseLayer extends Layer {
     public ActivationFunction getActivationFunction(){return activationFunction;}
 
     @Override
-    public void build() throws Exception{
+    public void build(){
         if(input_depth>1 || input_width > 1){
-            throw new Exception("Must Flatten Input!");
+            throw new RuntimeException("Must Flatten Input!");
         }else{
             if(activationFunction == null){
                 this.activationFunction = new Sigmoid();

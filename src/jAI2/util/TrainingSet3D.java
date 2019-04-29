@@ -120,7 +120,7 @@ public class TrainingSet3D extends ArrayList<TrainingSet3D.Data> {
         }
 
         public String toString(){
-            return "(" + Arrays.toString(input[0][0]) +","+ Arrays.toString(output[0][0]) + ")";
+            return "(" + Arrays.toString(input[0][0]) +"=>"+ Arrays.toString(output[0][0]) + ")";
         }
     }
 }

@@ -2,9 +2,9 @@ package jAI2.layers;
 
 public abstract class Layer {
 
-    protected int input_depth,input_width,input_height;
-    protected int output_depth,output_width,output_height;
-    protected double[][][] outputs;
+    int input_depth,input_width,input_height;
+    int output_depth,output_width,output_height;
+    double[][][] outputs;
     protected double[][][] output_derivatives;
     protected double[][][] errors;
 
@@ -21,7 +21,7 @@ public abstract class Layer {
         this.output_height = output_height;
     }
 
-    public void connectToNextLayer(Layer _nextLayer) throws Exception {
+    public void connectToNextLayer(Layer _nextLayer){
 
         this.nextLayer = _nextLayer;
         _nextLayer.prevLayer = this;
@@ -31,7 +31,7 @@ public abstract class Layer {
         _nextLayer.input_height = this.output_height;
 
         if(this.output_depth < 0 || this.output_width<0 || this.output_height<0){
-            throw new Exception("Bad Dimensions!");
+            throw new RuntimeException("Bad Dimensions!");
         }
 
         _nextLayer.initArrays();
@@ -44,7 +44,7 @@ public abstract class Layer {
         errors = new double[output_depth][output_width][output_height];
     }
 
-    public abstract void build() throws Exception;
+    public abstract void build();
 
     public abstract void feedForward();
     public void feedForwardNetwork(){
@@ -77,19 +77,18 @@ public abstract class Layer {
         return outputs;
     }
 
-    public boolean isMatchingDimensions(double[][][] in){
+    public boolean inMatchingDimensions(double[][][] in){
         return in.length == input_depth &&
                 in[0].length == input_width &&
                 in[0][0].length == input_height;
     }
 
-    public void isMatchingDimensions(double[][][] in,double[][][] in2){
-        if( !(in.length == in2.length &&
-                in[0].length == in2[0].length&&
-                in[0][0].length == in2[0][0].length)){
-
-        }
+    public boolean outMatchingDimensions(double[][][] in){
+        return in.length == output_depth &&
+                in[0].length == output_width &&
+                in[0][0].length == output_height;
     }
+
 
     public double[][][] getOutput_derivatives() {
         return output_derivatives;

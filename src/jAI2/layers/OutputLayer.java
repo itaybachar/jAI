@@ -3,7 +3,7 @@ package jAI2.layers;
 import jAI2.functions.errors.ErrorFunction;
 import jAI2.functions.errors.MSE;
 
-public class OutputLayer extends Layer{
+public class OutputLayer extends Layer {
 
     private ErrorFunction errorFunction;
 
@@ -11,26 +11,34 @@ public class OutputLayer extends Layer{
         super(prev.output_depth, prev.output_width, prev.output_height);
     }
 
-    public OutputLayer(int output_depth,int output_width, int output_height) {
+    public OutputLayer(int output_depth, int output_width, int output_height) {
         super(output_depth, output_width, output_height);
     }
 
-    public Layer setErrorFunction(ErrorFunction errorFunction){
-        this.errorFunction =errorFunction;
+    public Layer setErrorFunction(ErrorFunction errorFunction) {
+        this.errorFunction = errorFunction;
         return this;
     }
 
-    public ErrorFunction getErrorFunction(){return errorFunction;}
-
-    public void calculateError(double[][][] exp){
-        errorFunction.apply(this,exp);
+    public ErrorFunction getErrorFunction() {
+        return errorFunction;
     }
 
-    public double calculateOverallError(double[][][] exp){return errorFunction.overall_error(this,exp);}
+    public void calculateError(double[][][] exp) {
+        if (outMatchingDimensions(exp))
+            errorFunction.apply(this, exp);
+        else throw new RuntimeException("Bad Dimensions!");
+    }
+
+    public double calculateOverallError(double[][][] exp) {
+        if (outMatchingDimensions(exp))
+            return errorFunction.overall_error(this, exp);
+        else throw new RuntimeException("Bad Dimensions!");
+    }
 
     @Override
     public void build() {
-        if(errorFunction == null) errorFunction = new MSE();
+        if (errorFunction == null) errorFunction = new MSE();
     }
 
     @Override
@@ -46,9 +54,9 @@ public class OutputLayer extends Layer{
 
     @Override
     public void updateWeights(double learning_rate) {
-
     }
 
     @Override
-    public void printWeights(){}
+    public void printWeights() {
+    }
 }

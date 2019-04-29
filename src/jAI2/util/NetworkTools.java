@@ -4,6 +4,21 @@ import java.math.RoundingMode;
 import java.text.DecimalFormat;
 
 public class NetworkTools {
+
+    public static double[][][][] createRandomArray(int num,int depth, int width,int height,double lowerLimit,double higherLimit){
+        double[][][][] arr = new double[num][depth][width][height];
+        for(int z = 0; z<num;z++)
+            arr[z] = createRandomArray(depth,width,height,lowerLimit,higherLimit);
+        return arr;
+    }
+
+    public static double[][][] createRandomArray(int depth,int width,int height,double lowerLimit,double higherLimit){
+        double[][][] arr = new double[depth][width][height];
+        for(int z = 0; z<depth;z++)
+            arr[z] = createRandomArray(width,height,lowerLimit,higherLimit);
+        return arr;
+    }
+
     public static double[][] createRandomArray(int width,int height,double lowerLimit,double higherLimit){
         double[][] arr = new double[width][height];
         for(int w = 0; w<width;w++)
@@ -32,10 +47,12 @@ public class NetworkTools {
             for (int y = 0; y < array[0].length; y++) {
                 sb.append("\t\t{");
                 for (int x = 0; x < array[0][0].length; x++) {
+                    if(x!=0)
+                        sb.append(", ");
                     sb.append(array[z][y][x]);
-                    sb.append(' ');
+
                 }
-                sb.append("\b}\n");
+                sb.append("}\n");
             }
             sb.append("\t}\n");
         }

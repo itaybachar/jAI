@@ -2,6 +2,8 @@ package jAI2;
 
 import com.jAI.util.MNISTReader;
 import com.jAI.util.TrainingSet;
+import jAI2.functions.activations.LeakyReLU;
+import jAI2.functions.activations.ReLU;
 import jAI2.functions.activations.Sigmoid;
 import jAI2.functions.errors.MSE;
 import jAI2.layers.DenseLayer;
@@ -22,18 +24,8 @@ public class test {
         double[] label = MNISTReader.loadLabels(labelFile);
         double[][] outs = MNISTReader.labelToNNOutputs(label);
 
-        TrainingSet3D set = new TrainingSet3D(NetworkTools.to3DArray(img),NetworkTools.to3DArray(outs));
-
-        NetworkBuilder networkBuilder = new NetworkBuilder(1,1,784);
-        networkBuilder.addLayer(new DenseLayer(75)
-                .setActivationFunction(new Sigmoid()).setWeightRange(-1,1));
-        networkBuilder.addLayer(new DenseLayer(10)
-                .setActivationFunction(new Sigmoid()).setWeightRange(-1,1));
-
-        Network net = networkBuilder.createNetwork();
-
-        net.train(set,200,100,100,0.1);
-       NetworkTools.printArray(net.predict(set.get(0).input));
-        System.out.println(set.get(0));
+        LeakyReLU r = new LeakyReLU(0.3);
+        System.out.println(r.activationPrime(-1));
+        System.out.println(r.activationPrime(100));
     }
 }
