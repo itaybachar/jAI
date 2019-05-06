@@ -19,19 +19,15 @@ public class NetworkBuilder {
     }
 
     public Network createNetwork() {
-        try {
-            Layer cur = input;
-            for (Layer l : layers) {
-                cur.connectToNextLayer(l);
-                cur = l;
-            }
-            output = new OutputLayer(cur);
-            cur.connectToNextLayer(output);
-            return new Network().setInputLayer(input).setOutputLayer(output);
-        }catch (Exception e){
-            System.out.println(e.getMessage());
+
+        Layer cur = input;
+        for (Layer l : layers) {
+            cur.connectToNextLayer(l);
+            cur = l;
         }
-        return null;
+        output = new OutputLayer(cur);
+        cur.connectToNextLayer(output);
+        return new Network().setInputLayer(input).setOutputLayer(output);
     }
 
     public void addLayer(Layer layer){

@@ -79,7 +79,7 @@ public class DenseLayer extends Layer {
         for(int prevNeuron = 0; prevNeuron<input_height;prevNeuron++){
             double sum = 0;
             for(int currentNeuron = 0; currentNeuron<output_height;currentNeuron++) {
-                sum += errors[0][0][currentNeuron] * weights[currentNeuron][prevNeuron];
+                    sum += errors[0][0][currentNeuron] * weights[currentNeuron][prevNeuron];
             }
             getPrevLayer().errors[0][0][prevNeuron] = getPrevLayer().getOutput_derivatives()[0][0][prevNeuron]*sum;
         }

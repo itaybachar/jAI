@@ -36,9 +36,12 @@ public class Network {
         return this.output.getOutputs();
     }
 
-    public void calculateError(double[][][] exp){
+    public void learn(double[][][] exp,double learningRate){
         output.calculateError(exp);
+        output.backpropNetwork();
+        input.updateWeightsNetwork(learningRate);
     }
+
 
 
     /**
