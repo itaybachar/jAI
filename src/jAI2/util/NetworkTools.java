@@ -37,6 +37,14 @@ public class NetworkTools {
         return Math.random()*(higherLimit-lowerLimit) + lowerLimit;
     }
 
+    public static void printArray(double[] array){
+        printArray(new double[][]{array});
+    }
+
+    public static void printArray(double[][] array){
+        printArray(new double[][][]{array});
+    }
+
     public static void printArray(double[][][] array) {
         StringBuilder sb = new StringBuilder();
         String dim = array.length+"x"+array[0].length+"x"+array[0][0].length + "\n";
