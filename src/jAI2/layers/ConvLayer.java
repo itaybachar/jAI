@@ -102,6 +102,7 @@ public class ConvLayer extends Layer {
                 for (int i = 0; i < output_width; i++) {
                     for (int j = 0; j < output_height; j++) {
                         outputs[kernel][i][j] += out[i][j];
+                        output_derivatives[kernel][i][j] = outputs[kernel][i][j];
                     }
                 }
             }
@@ -137,12 +138,12 @@ public class ConvLayer extends Layer {
     public void backprop() {
         for(int kernel = 0; kernel <output_depth;kernel++){
             for(int depth = 0; depth<input_depth;depth++){
-                getPrevLayer().errors[depth] = getInputError(errors[kernel],kernels[kernel][depth],stride,padding_size);
+                getPrevLayer().errors[depth] = getInputError(errors[kernel],kernels[kernel][depth],stride,padding_size,depth);
             }
         }
     }
 
-    private double[][] getInputError(double[][] err, double[][] fil, int stride, int[] padding) {
+    private double[][] getInputError(double[][] err, double[][] fil, int stride, int[] padding,int depth) {
         double[][] in_error = new double[input_width][input_height];
 
         for(int error_x = 0; error_x < err.length; error_x++){
@@ -162,7 +163,7 @@ public class ConvLayer extends Layer {
                         if(index_x> -1 && index_x<in_error.length &&
                                 index_y>-1 && index_y< in_error[0].length) {
 
-                            in_error[index_x][index_y] +=err[error_x][error_y]*fil[filter_x][filter_y];
+                            in_error[index_x][index_y] +=err[error_x][error_y]*fil[filter_x][filter_y]*getPrevLayer().getOutput_derivatives()[depth][index_x][index_y];
                         }
                     }
                 }
@@ -264,31 +265,46 @@ public class ConvLayer extends Layer {
                         {0, 0, 0}
                 },
                 {
-                        {1, 0, 1},
-                        {1, 1, 1},
-                        {1, 0, 1}
+                        {0, 0, 0},
+                        {0, 1, 0},
+                        {0, 0, 0}
+                },
+                {
+                        {0, 0, 1},
+                        {0, 1, 0},
+                        {1, 0, 0}
+                },
+                {
+                        {1, 0, 0},
+                        {0.5, 1, 0},
+                        {0, 1, 0}
                 }
         };
 
         double[][] outs = {
-                {1,0,0},
-                {0,1,0},
-                {0,0,1}
+                {1, 0, 0, 0, 0},
+                {0, 1, 0, 0, 0},
+                {0, 0, 1, 0, 0},
+                {0, 0, 0, 1, 0},
+                {0, 0, 0, 0, 1}
         };
 
         NetworkBuilder b= new NetworkBuilder(1,3,3);
-        b.addLayer(new ConvLayer(3,1,false,2,2)
+        b.addLayer(new ConvLayer(4,1,false,2,2)
                 .setActivationFunction(new ReLU()).setKernelRange(-1,1).setBiasRange(-1,1));
         b.addLayer(new TransformationLayer());
-        b.addLayer(new DenseLayer(3).setActivationFunction(new Sigmoid()).setBiasRange(-1,1).setWeightRange(-1,1));
+        b.addLayer(new DenseLayer(5).setActivationFunction(new Sigmoid()).setBiasRange(-1,1).setWeightRange(-1,1));
 
         Network n = b.createNetwork();
 
         for(int i = 0;i<10000;i++) {
-            n.predict(new double[][][]{arr[i%outs[0].length]});
-            n.learn(new double[][][]{{outs[i%outs[0].length]}},0.01);
+            n.predict(new double[][][]{arr[i%outs.length]});
+            n.learn(new double[][][]{{outs[i%outs.length]}},0.1);
         }
 
-       NetworkTools.printArray( n.predict(new double[][][]{arr[1]}));
+        for(int i =0;i<outs.length;i++){
+            NetworkTools.printArray( n.predict(new double[][][]{arr[i]}));
+        }
+
     }
 }

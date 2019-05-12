@@ -13,7 +13,7 @@ public class MNISTReader {
     private static ByteArrayInputStream inputStream;
     public static int rows,cols;
 
-        public static double[][] loadImages(File imageFile,boolean normalize) {
+        public static double[][][] loadImages(File imageFile,boolean normalize,boolean flatten) {
             try {
                 inputStream = new ByteArrayInputStream(new FileInputStream(imageFile).readAllBytes());
 
@@ -28,12 +28,20 @@ public class MNISTReader {
                 cols = nextNByte(4);
 
                 //Initialize the image array
-                double[][] images = new double[imageNum][rows*cols];
-
+                double[][][] images;
+                if(flatten)
+                    images = new double[imageNum][1][rows*cols];
+                else
+                    images = new double[imageNum][rows][cols];
                 //Place the input
                 for(int i = 0; i<imageNum;i++){
-                    for(int k = 0; k<cols*rows;k++){
-                        images[i][k]= inputStream.read();
+                    for(int row = 0; row<rows;row++){
+                        for(int col = 0; col<cols;col++){
+                            if(flatten)
+                                images[i][0][row*cols + col] = inputStream.read();
+                            else
+                                images[i][col][row] = inputStream.read();
+                        }
                     }
                 }
 
@@ -42,7 +50,8 @@ public class MNISTReader {
 
                 //Normalize Array to values between 0-1
                 if(normalize)
-                    Matrix.normalize_array(images,0,255,0,1);
+                    for(int i =0;i<imageNum;i++)
+                    Matrix.normalize_array(images[i],0,255,0,1);
 
                 //Verbose Output
                 System.out.println("Images Loaded!");
