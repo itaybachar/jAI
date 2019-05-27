@@ -108,7 +108,7 @@ public class MaxPool extends Layer {
         };
 
         NetworkTools.printArray(n.predict(in));
-        n.learn(out,1);
+//        n.learn(out,1);
         NetworkTools.printArray(n.getInputLayer().errors);
 
 

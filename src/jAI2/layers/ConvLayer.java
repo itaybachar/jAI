@@ -7,8 +7,6 @@ import jAI2.functions.activations.Sigmoid;
 import jAI2.util.NetworkBuilder;
 import jAI2.util.NetworkTools;
 
-import java.util.Arrays;
-
 public class ConvLayer extends Layer {
 
     private double[][][][] kernels;
@@ -19,6 +17,7 @@ public class ConvLayer extends Layer {
     private int[] kernel_dim;
     private double lowerBiasRange = -1, higherBiasRange = 1;
     private double lowerKernelRange = -1,higherKernelRange =1;
+    private boolean kernelsDefined = false;
 
     /*
     Padding Formula(to keep same dimensions):
@@ -45,8 +44,10 @@ public class ConvLayer extends Layer {
     }
 
     public void initArrays(){
-        for(int i = 0; i<kernels.length;i++)
-            kernels[i] = new double[input_depth][kernel_dim[0]][kernel_dim[1]];
+        if(!kernelsDefined) {
+            for (int i = 0; i < kernels.length; i++)
+                kernels[i] = new double[input_depth][kernel_dim[0]][kernel_dim[1]];
+        }
 
         if (padding_size != null) {
             //Set padding dimensions to retain output size
@@ -68,8 +69,10 @@ public class ConvLayer extends Layer {
     @Override
     public void build() {
         //Initialize Kernels and bias
-        kernels = NetworkTools.createRandomArray(kernels.length, kernels[0].length, kernels[0][0].length,kernels[0][0][0].length, lowerKernelRange, higherKernelRange);
-        bias = NetworkTools.createRandomArray(bias.length, lowerBiasRange, higherBiasRange);
+        if(!kernelsDefined) {
+            kernels = NetworkTools.createRandomArray(kernels.length, kernels[0].length, kernels[0][0].length, kernels[0][0][0].length, lowerKernelRange, higherKernelRange);
+            bias = NetworkTools.createRandomArray(bias.length, lowerBiasRange, higherBiasRange);
+        }
 
         if (activationFunction == null)
             activationFunction = new ReLU();
@@ -102,7 +105,6 @@ public class ConvLayer extends Layer {
                 for (int i = 0; i < output_width; i++) {
                     for (int j = 0; j < output_height; j++) {
                         outputs[kernel][i][j] += out[i][j];
-                        output_derivatives[kernel][i][j] = outputs[kernel][i][j];
                     }
                 }
             }
@@ -116,12 +118,19 @@ public class ConvLayer extends Layer {
         for (int in_x = 0; in_x +fil.length <= in.length + (padding[0] * 2); in_x += stride) {
             for (int in_y = 0; in_y + fil[0].length <= in[0].length + (padding[1] * 2); in_y += stride) {
                 double sum = 0;
-                for (int x = in_x; x < in_x + fil.length; x++) {
-                    for (int y = in_y; y < in_y + fil[0].length; y++) {
+//                for (int x = in_x; x < in_x + fil.length; x++) {
+//                    for (int y = in_y; y < in_y + fil[0].length; y++) {
+                for (int x = 0; x < fil.length; x++) {
+                    for (int y = 0; y <fil[0].length; y++) {
 
+                        /*
                         if (x >= padding[0] && x < in.length + padding[0] &&
-                                y>= padding[1] && y<in.length+padding[1] ) {
-                            sum += in[x - padding[0]][y-padding[1]] * fil[(x+in_x) % (fil.length)][(y+in_y)%(fil[0].length)];
+                                y >= padding[1] && y  <in[0].length+padding[1] ) {
+                                  sum += in[x - padding[0]][y-padding[1]] * fil[(x+in_x) % (fil.length)][(y+in_y)%(fil[0].length)];
+                         */
+                        if (x+in_x >= padding[0] && x+in_x < in.length + padding[0] &&
+                                y + in_y>= padding[1] && y + in_y <in[0].length+padding[1] ) {
+                            sum += in[x+in_x - padding[0]][y+in_y-padding[1]] * fil[x][y];
                         }
 
                     }
@@ -227,9 +236,17 @@ public class ConvLayer extends Layer {
         return kernel_error;
     }
 
+    public ConvLayer setKernel(int index, double[][][] kernel,double bias){
+        kernels[index] = kernel;
+        this.bias[index] = bias;
+        kernelsDefined = true;
+        return this;
+    }
+
     @Override
     public void printWeights() {
-
+        for(int i = 0; i<kernels.length;i++)
+        NetworkTools.printArray(kernels[i]);
     }
 
     public ConvLayer setActivationFunction(ActivationFunction function){
@@ -251,6 +268,8 @@ public class ConvLayer extends Layer {
 
         return this;
     }
+
+
 
     public static void main(String[] args) {
         double[][][] arr = {
@@ -290,16 +309,22 @@ public class ConvLayer extends Layer {
         };
 
         NetworkBuilder b= new NetworkBuilder(1,3,3);
-        b.addLayer(new ConvLayer(4,1,false,2,2)
+        b.addLayer(new ConvLayer(20,1,false,2,2)
                 .setActivationFunction(new ReLU()).setKernelRange(-1,1).setBiasRange(-1,1));
+
         b.addLayer(new TransformationLayer());
+        b.addLayer(new DenseLayer(50).setActivationFunction(new Sigmoid()).setBiasRange(-1,1).setWeightRange(-1,1));
+
         b.addLayer(new DenseLayer(5).setActivationFunction(new Sigmoid()).setBiasRange(-1,1).setWeightRange(-1,1));
 
         Network n = b.createNetwork();
 
+//        for(int i = 0;i<10000;i++) {
+//                    n.learn(new double[][][]{arr[i%arr.length]},new double[][][]{{outs[i%outs.length]}},0.001);
+//        }
+
         for(int i = 0;i<10000;i++) {
-            n.predict(new double[][][]{arr[i%outs.length]});
-            n.learn(new double[][][]{{outs[i%outs.length]}},0.1);
+            n.learn(new double[][][]{arr[i%arr.length]},new double[][][]{{outs[i%arr.length]}},0.001);
         }
 
         for(int i =0;i<outs.length;i++){

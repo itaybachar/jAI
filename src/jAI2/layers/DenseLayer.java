@@ -2,13 +2,12 @@ package jAI2.layers;
 
 import jAI2.functions.activations.ActivationFunction;
 import jAI2.functions.activations.Sigmoid;
-import jAI2.functions.errors.MSE;
 import jAI2.util.NetworkTools;
 
 public class DenseLayer extends Layer {
 
-    double[][] weights;
-    double[] bias;
+    private double[][] weights;
+    private double[] bias;
 
     private double lowerBiasRange =-1 ,higherBiasRange = 1;
     private double lowerWeightRange = Double.NaN,higherWeightRange = Double.NaN;

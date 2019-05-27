@@ -1,5 +1,7 @@
 package jAI2.layers;
 
+import jAI2.util.NetworkTools;
+
 public abstract class Layer {
 
     int input_depth,input_width,input_height;
@@ -119,4 +121,18 @@ public abstract class Layer {
     }
 
     public abstract void printWeights();
+
+    public String toString(){
+        StringBuilder sb = new StringBuilder();
+        sb.append(this.getClass().getSimpleName());
+        sb.append('\n');
+        sb.append("Output:\n");
+        sb.append(NetworkTools.arrayToString(outputs));
+        sb.append("\nDerivatives:\n");
+        sb.append(NetworkTools.arrayToString(output_derivatives));
+        sb.append("\nErrors:\n");
+        sb.append(NetworkTools.arrayToString(errors));
+        sb.append('\n');
+        return sb.toString();
+    }
 }

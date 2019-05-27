@@ -1,8 +1,5 @@
 package jAI2.util;
 
-import java.math.RoundingMode;
-import java.text.DecimalFormat;
-
 public class NetworkTools {
 
     public static double[][][][] createRandomArray(int num,int depth, int width,int height,double lowerLimit,double higherLimit){
@@ -46,6 +43,10 @@ public class NetworkTools {
     }
 
     public static void printArray(double[][][] array) {
+        System.out.println(arrayToString(array));
+    }
+
+    public static String arrayToString(double[][][] array){
         StringBuilder sb = new StringBuilder();
         String dim = array.length+"x"+array[0].length+"x"+array[0][0].length + "\n";
         sb.append(dim);
@@ -65,7 +66,7 @@ public class NetworkTools {
             sb.append("\t}\n");
         }
         sb.append("}\n");
-        System.out.println(sb);
+        return sb.toString();
     }
 
     public static double[][][] to3DArray(double[][] in){

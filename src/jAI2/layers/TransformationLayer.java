@@ -1,9 +1,5 @@
 package jAI2.layers;
 
-import jAI2.Network;
-import jAI2.util.NetworkBuilder;
-import jAI2.util.NetworkTools;
-
 public class TransformationLayer extends Layer{
 
     public void initArrays(){

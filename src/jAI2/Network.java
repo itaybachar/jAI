@@ -1,12 +1,8 @@
 package jAI2;
 
 import jAI2.layers.InputLayer;
-import jAI2.layers.Layer;
 import jAI2.layers.OutputLayer;
 import jAI2.util.TrainingSet3D;
-
-import java.util.ArrayList;
-import java.util.Arrays;
 
 public class Network {
     private InputLayer input;
@@ -36,7 +32,8 @@ public class Network {
         return this.output.getOutputs();
     }
 
-    public void learn(double[][][] exp,double learningRate){
+    public void learn(double[][][] in,double[][][] exp,double learningRate){
+        predict(in);
         output.calculateError(exp);
         output.backpropNetwork();
         input.updateWeightsNetwork(learningRate);

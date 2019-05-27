@@ -1,7 +1,5 @@
 package jAI2.util;
 
-import com.jAI.util.TrainingSet;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 

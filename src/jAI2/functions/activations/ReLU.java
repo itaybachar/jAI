@@ -8,6 +8,6 @@ public class ReLU extends ActivationFunction {
 
     @Override
     public double activationPrime(double x) {
-        return x<0? 0:1;
+        return x>0? 1:0;
     }
 }

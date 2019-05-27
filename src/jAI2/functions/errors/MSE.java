@@ -9,7 +9,9 @@ public class MSE extends ErrorFunction{
             for (int d = 0; d < in.getOutput_depth(); d++) {
                 for (int w = 0; w < in.getOutput_width(); w++) {
                     for (int h = 0; h < in.getOutput_height(); h++) {
-                        in.getErrors()[d][w][h] = in.getOutputs()[d][w][h] - exp_out[d][w][h];
+                        in.getErrors()[d][w][h] = in.getOutput_derivatives()[d][w][h]*
+                                (
+                                in.getOutputs()[d][w][h] - exp_out[d][w][h]);
                     }
                 }
             }
